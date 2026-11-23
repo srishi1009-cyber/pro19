@@ -1,10 +1,12 @@
 "use strict";
 
-const CACHE_NAME = "rishi-music-offline-v1";
+const CACHE_NAME = "rishi-music-offline-v2";
 const APP_ASSETS = [
   "./",
   "./index.html",
-  "./manifest.json"
+  "./manifest.json",
+  "./icon-192.png",
+  "./icon-512.png"
 ];
 
 self.addEventListener("install", e => {
@@ -25,11 +27,16 @@ self.addEventListener("activate", e => {
 
 self.addEventListener("fetch", e => {
   if (e.request.method !== "GET") return;
+  const url = new URL(e.request.url);
+
+  // Never cache live online lyrics API searches
+  if (url.hostname.includes("lrclib.net")) return;
+
   e.respondWith(
     caches.match(e.request).then(cached => {
       if (cached) return cached;
       return fetch(e.request).then(res => {
-        if (res && res.status === 200) {
+        if (res && res.status === 200 && url.origin === location.origin) {
           const clone = res.clone();
           caches.open(CACHE_NAME).then(cache => cache.put(e.request, clone)).catch(() => {});
         }
