@@ -14,7 +14,7 @@
 <link rel="icon" href="./icon-192.png">
 <link rel="apple-touch-icon" href="./icon-192.png">
 
-<title>RISHI MUSIC — AirPods &amp; Hybrid Voice AI</title>
+<title>RISHI MUSIC — Studio &amp; Hybrid AI</title>
 
 <style>
 :root {
@@ -323,19 +323,6 @@ input[type=range] { accent-color:var(--accent); flex:1; width:100%; }
   text-overflow:ellipsis;
 }
 
-.studio-tools {
-  display:flex;
-  gap:6px;
-  margin-top:10px;
-  position:relative;
-  z-index:1;
-}
-.studio-tools .btn {
-  padding:6px 12px;
-  font-size:12px;
-  font-weight:700;
-}
-
 .studio-scroll {
   flex:1;
   overflow-y:auto;
@@ -615,6 +602,36 @@ body.compact #rvdj-widget { bottom:calc(90px + env(safe-area-inset-bottom)); }
   font-size:14px;
 }
 
+.stats-grid {
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:8px;
+  margin-top:8px;
+}
+.stat-card {
+  background:var(--card);
+  border:1px solid var(--line);
+  border-radius:14px;
+  padding:10px;
+  text-align:center;
+  min-width:0;
+}
+.stat-val {
+  font-size:15px;
+  font-weight:900;
+  color:var(--accent);
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.stat-lbl {
+  font-size:10px;
+  color:var(--mut);
+  margin-top:3px;
+  text-transform:uppercase;
+  letter-spacing:.4px;
+}
+
 .prev {
   margin:9px 0;
   padding:14px;
@@ -776,6 +793,46 @@ body.compact #rvdj-widget { bottom:calc(90px + env(safe-area-inset-bottom)); }
       <button class="btn ic" id="sx">✕</button>
     </div>
 
+    <h3>🎛️ Audio DSP &amp; Sound Studio</h3>
+    <div class="set">
+      <label>Sound &amp; EQ Preset</label>
+      <select id="dspPreset">
+        <option value="flat">Flat (Original)</option>
+        <option value="bass">🔊 Bass Boost</option>
+        <option value="vocal">🎤 Vocal Clarity</option>
+        <option value="concert">🏟️ Concert Hall</option>
+        <option value="slowed">🌊 Slowed + Reverb (0.85x)</option>
+      </select>
+    </div>
+    <div class="set">
+      <label>8D Spatial Audio (Auto-Pan)</label>
+      <input type="checkbox" class="sw" id="spatial8d">
+    </div>
+    <div class="set">
+      <label>Karaoke Vocal Remover</label>
+      <input type="checkbox" class="sw" id="karaokeMode">
+    </div>
+    <div class="set">
+      <label>Volume Normalization</label>
+      <input type="checkbox" class="sw" id="normalizeAudio">
+    </div>
+
+    <h3>⏰ Smart Sleep Timer &amp; Hands-Free</h3>
+    <div class="set">
+      <label>Sleep Timer <span id="sleepCountdown" style="color:var(--accent);font-weight:700"></span></label>
+      <select id="sleepTimerSelect">
+        <option value="0">Off</option>
+        <option value="track">End of current song</option>
+        <option value="15">15 minutes</option>
+        <option value="30">30 minutes</option>
+        <option value="60">60 minutes</option>
+      </select>
+    </div>
+    <div class="set">
+      <label>Shake Phone to Skip Track</label>
+      <input type="checkbox" class="sw" id="shakeSkip">
+    </div>
+
     <h3>🎧 AirPods &amp; Dual-Mode Voice DJ</h3>
     <div class="set">
       <label>DJ Voice (Ladies / Gents)</label>
@@ -881,8 +938,23 @@ body.compact #rvdj-widget { bottom:calc(90px + env(safe-area-inset-bottom)); }
       </select>
     </div>
 
-    <h3>Music library</h3>
-    <div class="set">
+    <h3>📊 Listening Stats &amp; Library</h3>
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-val" id="statTotalPlays">0</div>
+        <div class="stat-lbl">Total Plays</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-val" id="statTopDir">—</div>
+        <div class="stat-lbl">Top Director</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-val" id="statTopSong">—</div>
+        <div class="stat-lbl">Top Song</div>
+      </div>
+    </div>
+
+    <div class="set" style="margin-top:8px">
       <label>Sort by</label>
       <select id="sort">
         <option value="name">Song name</option>
@@ -897,15 +969,24 @@ body.compact #rvdj-widget { bottom:calc(90px + env(safe-area-inset-bottom)); }
         <option value="grid">Grid</option>
       </select>
     </div>
+    <div class="set">
+      <label>Reset "Played Today" badges</label>
+      <button type="button" class="btn" id="resetPlayedTodayBtn" style="padding:6px 12px;font-size:12px">↺ Reset Today</button>
+    </div>
+    <div class="set">
+      <label>Clean duplicate song titles</label>
+      <button type="button" class="btn" id="cleanDupesBtn" style="padding:6px 12px;font-size:12px">🧹 Scan Dupes</button>
+    </div>
 
-    <h3>App</h3>
+    <h3>App &amp; Backup</h3>
     <div class="set"><label>Compact player</label><input type="checkbox" class="sw" id="compact"></div>
     <div class="set"><label>Show artwork</label><input type="checkbox" class="sw" id="art"></div>
     <div class="set"><label>Songs</label><span id="cnt"></span></div>
     <div class="set"><label>Storage used</label><span id="stor"></span></div>
 
-    <div class="row" style="margin-top:14px">
-      <button class="btn" id="exp">Export backup</button>
+    <div class="row" style="margin-top:14px;flex-wrap:wrap">
+      <button class="btn" id="exp">⬇️ Export Backup</button>
+      <button class="btn" id="impBackupBtn">⬆️ Restore Backup</button>
       <button class="btn pri" id="done" style="margin-left:auto">Done</button>
     </div>
   </div>
@@ -1076,10 +1157,15 @@ const delRec = id => new Promise((res, rej) => {
   t.onerror = () => rej(t.error);
 });
 
-/* 5. SETTINGS */
+/* 5. SETTINGS & WEB AUDIO DSP STUDIO */
 const DEF = {
   theme: "system",
   accent: "#1d72fe",
+  dspPreset: "flat",
+  spatial8d: false,
+  karaokeMode: false,
+  normalizeAudio: false,
+  shakeSkip: false,
   showLyrics: true,
   autoLyrics: true,
   voiceGender: "female",
@@ -1110,6 +1196,145 @@ const toHex = (r, g, b) => "#" + [r, g, b].map(v => (+v).toString(16).padStart(2
 const mq = matchMedia("(prefers-color-scheme: dark)");
 const baseVol = () => { au.volume = Math.max(0, Math.min(1, st.volume / 100)); };
 
+/* Web Audio DSP Graph (EQ, 8D Auto-Pan, Karaoke Vocal Remover, Compressor, Reverb) */
+let dspCtx = null;
+let dspReady = false;
+let bassFilter = null;
+let midFilter = null;
+let trebleFilter = null;
+let compNode = null;
+let pannerNode = null;
+let reverbWetGain = null;
+let normalStereoGain = null;
+let karaokeGain = null;
+let panRaf = null;
+
+function initAudioDsp() {
+  if (dspReady) {
+    if (dspCtx && dspCtx.state === "suspended") dspCtx.resume().catch(() => {});
+    return;
+  }
+  const AC = window.AudioContext || window.webkitAudioContext;
+  if (!AC) return;
+
+  try {
+    dspCtx = new AC();
+    const src = dspCtx.createMediaElementSource(au);
+
+    bassFilter = dspCtx.createBiquadFilter();
+    bassFilter.type = "lowshelf";
+    bassFilter.frequency.value = 90;
+
+    midFilter = dspCtx.createBiquadFilter();
+    midFilter.type = "peaking";
+    midFilter.frequency.value = 1400;
+    midFilter.Q.value = 1.0;
+
+    trebleFilter = dspCtx.createBiquadFilter();
+    trebleFilter.type = "highshelf";
+    trebleFilter.frequency.value = 8000;
+
+    compNode = dspCtx.createDynamicsCompressor();
+    pannerNode = dspCtx.createStereoPanner();
+
+    // Karaoke vocal cancellation branch (L - R center vocal subtraction)
+    const splitter = dspCtx.createChannelSplitter(2);
+    const invertR = dspCtx.createGain();
+    invertR.gain.value = -1;
+    const monoDiff = dspCtx.createGain();
+    splitter.connect(monoDiff, 0);
+    splitter.connect(invertR, 1);
+    invertR.connect(monoDiff);
+
+    normalStereoGain = dspCtx.createGain();
+    karaokeGain = dspCtx.createGain();
+
+    // Synthesized impulse reverb branch
+    const convolver = dspCtx.createConvolver();
+    const len = dspCtx.sampleRate * 1.6;
+    const impulse = dspCtx.createBuffer(2, len, dspCtx.sampleRate);
+    for (let ch = 0; ch < 2; ch++) {
+      const d = impulse.getChannelData(ch);
+      for (let i = 0; i < len; i++) {
+        d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 2.6);
+      }
+    }
+    convolver.buffer = impulse;
+    reverbWetGain = dspCtx.createGain();
+    reverbWetGain.gain.value = 0;
+
+    src.connect(bassFilter);
+    bassFilter.connect(midFilter);
+    midFilter.connect(trebleFilter);
+    trebleFilter.connect(compNode);
+
+    // Split between normal stereo and karaoke vocal remover
+    compNode.connect(normalStereoGain);
+    compNode.connect(splitter);
+    monoDiff.connect(karaokeGain);
+
+    normalStereoGain.connect(pannerNode);
+    karaokeGain.connect(pannerNode);
+
+    // Reverb send
+    pannerNode.connect(convolver);
+    convolver.connect(reverbWetGain);
+    reverbWetGain.connect(dspCtx.destination);
+
+    pannerNode.connect(dspCtx.destination);
+    dspReady = true;
+    applyAudioDsp();
+  } catch (err) {
+    console.warn("DSP init skipped:", err);
+  }
+}
+
+function applyAudioDsp() {
+  const effectiveSpeed = st.dspPreset === "slowed" ? 0.85 : +st.speed;
+  au.playbackRate = effectiveSpeed;
+
+  if (!dspReady) return;
+
+  // EQ Presets
+  const presets = {
+    flat:    { bass: 0,  mid: 0,  treble: 0,  reverb: 0 },
+    bass:    { bass: 11, mid: -2, treble: 3,  reverb: 0 },
+    vocal:   { bass: -3, mid: 7,  treble: 4,  reverb: 0 },
+    concert: { bass: 5,  mid: 2,  treble: 5,  reverb: 0.35 },
+    slowed:  { bass: 4,  mid: -1, treble: -2, reverb: 0.42 }
+  };
+  const p = presets[st.dspPreset] || presets.flat;
+  bassFilter.gain.value = p.bass;
+  midFilter.gain.value = p.mid;
+  trebleFilter.gain.value = p.treble;
+  reverbWetGain.gain.value = p.reverb;
+
+  // Karaoke mode toggle
+  normalStereoGain.gain.value = st.karaokeMode ? 0 : 1;
+  karaokeGain.gain.value = st.karaokeMode ? 1.25 : 0;
+
+  // Volume normalization compressor
+  compNode.threshold.value = st.normalizeAudio ? -26 : 0;
+  compNode.ratio.value = st.normalizeAudio ? 8 : 1;
+
+  // 8D Spatial Audio auto-panning loop
+  if (st.spatial8d && !panRaf) {
+    const startT = performance.now();
+    const panLoop = now => {
+      if (!st.spatial8d || !pannerNode) {
+        if (pannerNode) pannerNode.pan.value = 0;
+        panRaf = null;
+        return;
+      }
+      pannerNode.pan.value = Math.sin((now - startT) / 1400) * 0.88;
+      panRaf = requestAnimationFrame(panLoop);
+    };
+    panRaf = requestAnimationFrame(panLoop);
+  } else if (!st.spatial8d && pannerNode) {
+    pannerNode.pan.value = 0;
+  }
+}
+
 function updateNetworkModeBadge() {
   const badge = $("rvdj-mode-badge");
   if (!badge) return;
@@ -1135,8 +1360,8 @@ function apply() {
   document.body.classList.toggle("compact", st.compact);
   document.body.classList.toggle("noart", !st.art);
   document.body.classList.toggle("hide-lyrics", !st.showLyrics);
-  au.playbackRate = +st.speed;
   baseVol();
+  applyAudioDsp();
   $("shufBtn").classList.toggle("on", st.shuffle);
   $("repBtn").classList.toggle("on", st.repeat !== "off");
   $("repBtn").textContent = st.repeat === "one" ? "🔂" : "🔁";
@@ -1147,6 +1372,65 @@ function apply() {
 }
 mq.addEventListener("change", apply);
 function set(c) { st = { ...st, ...c }; save(); apply(); }
+
+/* Smart Sleep Timer with Smooth Volume Fade-Out */
+let sleepEndTime = 0;
+let sleepEndOfTrack = false;
+let sleepInterval = null;
+
+function setSleepTimer(val) {
+  clearInterval(sleepInterval);
+  sleepEndTime = 0;
+  sleepEndOfTrack = false;
+  baseVol();
+
+  if (val === "0") {
+    $("sleepCountdown").textContent = "";
+    return;
+  }
+  if (val === "track") {
+    sleepEndOfTrack = true;
+    $("sleepCountdown").textContent = "(After this song)";
+    return;
+  }
+  const mins = Number(val);
+  sleepEndTime = Date.now() + mins * 60000;
+  sleepInterval = setInterval(() => {
+    const rem = sleepEndTime - Date.now();
+    if (rem <= 0) {
+      clearInterval(sleepInterval);
+      sleepEndTime = 0;
+      $("sleepTimerSelect").value = "0";
+      $("sleepCountdown").textContent = "";
+      pause();
+      baseVol();
+      return;
+    }
+    const secLeft = Math.ceil(rem / 1000);
+    const m = Math.floor(secLeft / 60);
+    const s = String(secLeft % 60).padStart(2, "0");
+    $("sleepCountdown").textContent = `(${m}:${s} left)`;
+
+    // Gradual 15-second volume fade-out before sleeping
+    if (secLeft <= 15 && !au.paused) {
+      au.volume = Math.max(0.02, (st.volume / 100) * (secLeft / 15));
+    }
+  }, 1000);
+}
+$("sleepTimerSelect").onchange = e => setSleepTimer(e.target.value);
+
+/* Shake-to-Skip Accelerometer Listener */
+let lastShakeTime = 0;
+window.addEventListener("devicemotion", e => {
+  if (!st.shakeSkip || au.paused) return;
+  const acc = e.accelerationIncludingGravity;
+  if (!acc) return;
+  const force = Math.sqrt((acc.x || 0) ** 2 + (acc.y || 0) ** 2 + (acc.z || 0) ** 2);
+  if (force > 24 && Date.now() - lastShakeTime > 1800) {
+    lastShakeTime = Date.now();
+    go(1);
+  }
+});
 
 /* 6. DAILY PLAY STATUS */
 const DAILY_KEY = "rishi_played_today_v2";
@@ -1166,6 +1450,12 @@ function markPlayedToday(id) {
   if (!d.ids.includes(id)) { d.ids.push(id); jset(DAILY_KEY, d); }
   refresh();
 }
+
+$("resetPlayedTodayBtn").onclick = () => {
+  jset(DAILY_KEY, { date: localDate(), ids: [] });
+  refresh();
+  alert("All 'Played Today' badges have been reset.");
+};
 
 /* 7. FULL-SCREEN SYNCED LYRICS STUDIO + TAP-TO-SEEK */
 let tracks = [];
@@ -1289,7 +1579,6 @@ function updateSyncedLyrics(forceScroll = false) {
   }
 }
 
-/* Open & Close Full-Screen Lyrics Studio */
 function openLyricStudio() {
   $("sm").classList.remove("open");
   $("lyricStudio").classList.add("open");
@@ -1307,7 +1596,6 @@ $("liveLyricBar").onclick = openLyricStudio;
 $("openStudioFromSettingsBtn").onclick = openLyricStudio;
 $("closeStudioBtn").onclick = closeLyricStudio;
 
-/* Tap-to-Seek inside Full-Screen Lyrics Studio */
 $("studioScroll").onclick = e => {
   const lineEl = e.target.closest(".s-line");
   if (!lineEl) return;
@@ -1561,7 +1849,7 @@ async function load(i, preUrl) {
   url = u;
   cur = i;
   au.src = u;
-  au.playbackRate = +st.speed;
+  applyAudioDsp();
   $("dT").textContent = t.title;
   $("dS").textContent = t.director;
   $("bar").value = 0;
@@ -1575,6 +1863,7 @@ async function load(i, preUrl) {
 }
 
 async function play() {
+  initAudioDsp();
   if (cur < 0 && tracks.length) {
     compute();
     const i = view.find(i => !hasPlayedToday(tracks[i].id));
@@ -1638,6 +1927,13 @@ au.onended = () => {
   if (ended) return;
   ended = true;
   markPlayedToday(tracks[cur]?.id);
+  if (sleepEndOfTrack) {
+    sleepEndOfTrack = false;
+    $("sleepTimerSelect").value = "0";
+    $("sleepCountdown").textContent = "";
+    syncIcons();
+    return;
+  }
   if (st.autoplay) go(1); else syncIcons();
 };
 au.onerror = () => { if (!busy && tracks[cur]) go(1); };
@@ -1726,7 +2022,7 @@ function media(t) {
   }
 }
 
-/* 10. CARD ACTIONS & IMPORT */
+/* 10. CARD ACTIONS, IMPORT & DUPLICATE CLEANER */
 let editingId = null;
 
 $("list").onclick = async e => {
@@ -1769,6 +2065,34 @@ $("list").onclick = async e => {
     dirs();
     render();
   }
+};
+
+$("cleanDupesBtn").onclick = async () => {
+  const seen = new Set();
+  const dupes = [];
+  tracks.forEach(t => {
+    const key = normSearch(t.title);
+    if (key && seen.has(key)) dupes.push(t);
+    else if (key) seen.add(key);
+  });
+  if (!dupes.length) {
+    alert("No duplicate song titles found in your library!");
+    return;
+  }
+  if (!confirm(`Found ${dupes.length} duplicate song(s). Delete the duplicates now?`)) return;
+  for (const d of dupes) {
+    await delRec(d.id);
+    const idx = tracks.indexOf(d);
+    if (idx >= 0) {
+      if (idx === cur) { au.pause(); cur = -1; }
+      else if (idx < cur) cur--;
+      tracks.splice(idx, 1);
+    }
+  }
+  dirs();
+  render();
+  $("cnt").textContent = tracks.length;
+  alert(`Removed ${dupes.length} duplicate song(s).`);
 };
 
 $("cancelEdit").onclick = () => { $("editModal").classList.remove("open"); editingId = null; };
@@ -2340,7 +2664,7 @@ $("rvdj-lang-toggle").onclick = () => {
   showDjCard(3500);
 };
 
-/* 12. SETTINGS BINDINGS */
+/* 12. SETTINGS BINDINGS, STATS & BACKUP RESTORE */
 const bind = (id, key, conv = x => x, evt = "change") => {
   $(id).addEventListener(evt, () => {
     const el = $(id);
@@ -2353,9 +2677,11 @@ const bind = (id, key, conv = x => x, evt = "change") => {
 
 function sync() {
   for (const [id, k] of [
-    ["theme", "theme"], ["showLyrics", "showLyrics"], ["autoLyricsToggle", "autoLyrics"],
-    ["djGenderSelect", "voiceGender"], ["djLangSelect", "voiceLang"],
-    ["earbudGestureSelect", "earbudGesture"],
+    ["theme", "theme"], ["dspPreset", "dspPreset"], ["spatial8d", "spatial8d"],
+    ["karaokeMode", "karaokeMode"], ["normalizeAudio", "normalizeAudio"],
+    ["shakeSkip", "shakeSkip"], ["showLyrics", "showLyrics"],
+    ["autoLyricsToggle", "autoLyrics"], ["djGenderSelect", "voiceGender"],
+    ["djLangSelect", "voiceLang"], ["earbudGestureSelect", "earbudGesture"],
     ["autoplay", "autoplay"], ["gapless", "gapless"], ["cf", "crossfade"],
     ["vol", "volume"], ["spd", "speed"], ["remember", "remember"],
     ["shuffle", "shuffle"], ["repeat", "repeat"], ["sort", "sort"],
@@ -2371,6 +2697,11 @@ function sync() {
 }
 
 bind("theme", "theme");
+bind("dspPreset", "dspPreset");
+bind("spatial8d", "spatial8d");
+bind("karaokeMode", "karaokeMode");
+bind("normalizeAudio", "normalizeAudio");
+bind("shakeSkip", "shakeSkip");
 bind("showLyrics", "showLyrics");
 bind("autoLyricsToggle", "autoLyrics");
 bind("djGenderSelect", "voiceGender");
@@ -2388,6 +2719,35 @@ bind("sort", "sort");
 bind("view", "view");
 bind("compact", "compact");
 bind("art", "art");
+
+function refreshStatsCard() {
+  const total = Object.values(plays).reduce((a, b) => a + b, 0);
+  $("statTotalPlays").textContent = total;
+
+  let topSongTitle = "—";
+  let topSongPlays = 0;
+  const dirCounts = {};
+
+  tracks.forEach(t => {
+    const c = plays[t.id] || 0;
+    if (c > topSongPlays) {
+      topSongPlays = c;
+      topSongTitle = cleanDisplay(t.title);
+    }
+    if (c > 0 && t.director && t.director !== "UNKNOWN DIRECTOR") {
+      dirCounts[t.director] = (dirCounts[t.director] || 0) + c;
+    }
+  });
+
+  let topDir = "—";
+  let maxDirPlays = 0;
+  for (const [d, c] of Object.entries(dirCounts)) {
+    if (c > maxDirPlays) { maxDirPlays = c; topDir = d; }
+  }
+
+  $("statTopDir").textContent = topDir;
+  $("statTopSong").textContent = topSongTitle;
+}
 
 let pend = st.accent;
 function preview(h) {
@@ -2418,6 +2778,7 @@ $("settingsBtn").onclick = () => {
   sync();
   preview(st.accent);
   updateSyncedLyrics(true);
+  refreshStatsCard();
   $("cnt").textContent = tracks.length;
   $("stor").textContent = "Calculating...";
   if (navigator.storage?.estimate) {
@@ -2439,6 +2800,34 @@ $("exp").onclick = () => {
   const u = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: "application/json" }));
   a.href = u; a.download = "rishi-music-backup.json"; a.click();
   setTimeout(() => URL.revokeObjectURL(u), 1000);
+};
+
+const backupFileInput = document.createElement("input");
+backupFileInput.type = "file";
+backupFileInput.accept = ".json,application/json";
+backupFileInput.hidden = true;
+document.body.appendChild(backupFileInput);
+
+$("impBackupBtn").onclick = () => { backupFileInput.value = ""; backupFileInput.click(); };
+backupFileInput.onchange = async e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  try {
+    const parsed = JSON.parse(await file.text());
+    if (parsed.settings) set(parsed.settings);
+    if (Array.isArray(parsed.favourites)) { favs = parsed.favourites; jset("rishi_favs", favs); }
+    if (parsed.playCounts) { plays = parsed.playCounts; jset("rishi_plays", plays); }
+    if (Array.isArray(parsed.recent)) { recent = parsed.recent; jset("rishi_recent", recent); }
+    if (parsed.lyrics) { lyricsMap = { ...lyricsMap, ...parsed.lyrics }; jset("rishi_lyrics_v1", lyricsMap); }
+    sync();
+    preview(st.accent);
+    refreshStatsCard();
+    updateSyncedLyrics(true);
+    render();
+    alert("Backup restored! Your settings, favourites, play counts, and saved lyrics have been loaded.");
+  } catch (_) {
+    alert("Invalid backup file. Please select a valid rishi-music-backup.json file.");
+  }
 };
 
 /* 13. PWA INSTALL */
