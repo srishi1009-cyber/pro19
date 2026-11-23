@@ -14,7 +14,7 @@
 <link rel="icon" href="./icon-192.png">
 <link rel="apple-touch-icon" href="./icon-192.png">
 
-<title>RISHI MUSIC — Hybrid Voice AI</title>
+<title>RISHI MUSIC — AirPods &amp; Hybrid Voice AI</title>
 
 <style>
 :root {
@@ -270,8 +270,8 @@ body.compact #rvdj-widget { bottom:calc(90px + env(safe-area-inset-bottom)); }
   display:none;
   flex-direction:column;
   gap:4px;
-  min-width:215px;
-  max-width:290px;
+  min-width:225px;
+  max-width:305px;
   padding:11px 14px;
   border-radius:18px;
   background:linear-gradient(145deg,#172641,#0b1525);
@@ -537,18 +537,18 @@ body.compact #rvdj-widget { bottom:calc(90px + env(safe-area-inset-bottom)); }
 <input type="file" id="files" accept="audio/*" multiple hidden>
 <audio id="au" preload="auto"></audio>
 
-<!-- FLOATING RISHI VOICE DJ (ONLINE EXACT SONG + OFFLINE CADENCE) -->
+<!-- FLOATING RISHI VOICE DJ (AIRPODS + OFFLINE NORMAL / ONLINE ADVANCED AI) -->
 <div id="rvdj-widget">
   <div id="rvdj-card">
     <div class="rvdj-head">
       <span>✦ Rishi Voice DJ</span>
       <div class="rvdj-actions">
         <button type="button" class="rvdj-lang-pill" id="rvdj-lang-toggle">EN / தமிழ்</button>
-        <span class="rvdj-badge" id="rvdj-mode-badge">ONLINE AI</span>
+        <span class="rvdj-badge" id="rvdj-mode-badge">ADVANCED ONLINE</span>
       </div>
     </div>
-    <div id="rvdj-heard">Tap mic or double-tap boAt Airdopes</div>
-    <div id="rvdj-reply">Online: say exact song/director • Offline: 1=Play/Pause, 2=Next, 3=Prev</div>
+    <div id="rvdj-heard">Double-tap AirPods or tap mic</div>
+    <div id="rvdj-reply">Online: Advanced AI (songs, moods, smart queue) • Offline: Normal (1=Play/Pause, 2=Next, 3=Prev)</div>
   </div>
   <button type="button" id="rvdj-fab" title="Rishi Voice DJ">🎙️</button>
 </div>
@@ -582,7 +582,7 @@ body.compact #rvdj-widget { bottom:calc(90px + env(safe-area-inset-bottom)); }
       <button class="btn ic" id="sx">✕</button>
     </div>
 
-    <h3>🎙️ Hybrid Rishi Voice DJ &amp; boAt Airdopes</h3>
+    <h3>🎧 AirPods &amp; Dual-Mode Voice DJ</h3>
     <div class="set">
       <label>DJ Voice (Ladies / Gents)</label>
       <select id="djGenderSelect">
@@ -598,7 +598,7 @@ body.compact #rvdj-widget { bottom:calc(90px + env(safe-area-inset-bottom)); }
       </select>
     </div>
     <div class="set">
-      <label>boAt Earbud Trigger</label>
+      <label>AirPods / Earbud Trigger</label>
       <select id="earbudGestureSelect">
         <option value="double">Double-Tap (Pause → Play)</option>
         <option value="triple">Triple-Tap (Previous Track)</option>
@@ -606,7 +606,7 @@ body.compact #rvdj-widget { bottom:calc(90px + env(safe-area-inset-bottom)); }
     </div>
     <div class="lyrics-settings-box">
       <div class="sb" id="offlineModelStatus" style="margin-bottom:8px;font-weight:700;line-height:1.5">
-        ✅ Hybrid Mode Active: Online plays exact song name • Offline uses 1/2/3/4+ beat commands
+        ✅ Dual Mode Active: Online = Advanced AI (exact song, mood, smart queue, track info) • Offline = Normal (1/2/3/4+ beats)
       </div>
       <div class="row" style="flex-wrap:wrap">
         <button type="button" class="btn pri" id="testVoiceBtn" style="padding:8px 14px;font-size:13px">
@@ -919,10 +919,10 @@ function updateNetworkModeBadge() {
   const badge = $("rvdj-mode-badge");
   if (!badge) return;
   if (navigator.onLine) {
-    badge.textContent = "ONLINE AI";
+    badge.textContent = "ADVANCED ONLINE";
     badge.classList.remove("offline");
   } else {
-    badge.textContent = "OFFLINE MODE";
+    badge.textContent = "NORMAL OFFLINE";
     badge.classList.add("offline");
   }
 }
@@ -979,6 +979,7 @@ let url = null;
 let tab = "all";
 let shown = 0;
 let view = [];
+let smartQueue = [];
 let favs = jget("rishi_favs", []);
 let plays = jget("rishi_plays", {});
 let recent = jget("rishi_recent", []);
@@ -1237,6 +1238,10 @@ $("viewBtn").onclick = () => { set({ view: st.view === "grid" ? "list" : "grid" 
 let pre = null;
 
 function pickNext(dir = 1) {
+  if (dir === 1 && smartQueue.length) {
+    const nextIdx = smartQueue.shift();
+    if (nextIdx >= 0 && nextIdx < tracks.length) return nextIdx;
+  }
   if (!tracks.length) return -1;
   if (!view.length) compute();
   const pool = (view.length ? view : tracks.map((t, i) => i)).filter(i => !hasPlayedToday(tracks[i].id));
@@ -1374,7 +1379,7 @@ $("repBtn").onclick = () => {
   sync();
 };
 
-/* MEDIA SESSION WITH boAt AIRDOPES BLUETOOTH EARBUD TRIGGER */
+/* MEDIA SESSION WITH AIRPODS & boAt BLUETOOTH EARBUD TRIGGER */
 let lastEarbudTap = 0;
 
 function triggerVoiceFromEarbud() {
@@ -1518,7 +1523,9 @@ $("files").onchange = async e => {
   render();
 };
 
-/* 11. HYBRID VOICE DJ (ONLINE = EXACT SONG NAME • OFFLINE = CADENCE BEATS) */
+/* 11. DUAL-MODE VOICE DJ:
+       - OFFLINE = NORMAL MODE (1/2/3/4+ Cadence Beats, 0 Internet)
+       - ONLINE  = ADVANCED AI MODE (Moods, Smart Queues, Track Info, Exact Song/Director) */
 const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
 let isListening = false;
 let onlineRec = null;
@@ -1572,7 +1579,7 @@ function speakDj(text, onDone) {
   const finish = () => { if (!finished) { finished = true; if (onDone) onDone(); } };
   utter.onend = finish;
   utter.onerror = finish;
-  setTimeout(finish, Math.max(1900, text.length * 95));
+  setTimeout(finish, Math.max(2000, text.length * 95));
   window.speechSynthesis.speak(utter);
 }
 
@@ -1597,11 +1604,37 @@ function stopAllVoiceListeners() {
   if (offlineMicStream) { offlineMicStream.getTracks().forEach(t => t.stop()); offlineMicStream = null; }
 }
 
-/* ONLINE: Fuzzy Phonetic Song & Director Matcher */
+/* ADVANCED ONLINE AI: Fuzzy Song/Director + Mood/Vibe + Smart Queue + Track Insights */
+const MOOD_KEYWORDS = {
+  romantic: ["love", "kadhal", "kaadhal", "kanave", "munbe", "vaseegara", "nenjukkul", "ennai", "anbe", "uyire", "heart", "mazhai", "rain", "poove", "thuli"],
+  energetic: ["kuthu", "vaathi", "arabic", "verithanam", "mass", "beat", "dance", "party", "workout", "gym", "beast", "vikram", "rowdy", "fire", "adchi", "bloody"],
+  chill: ["bgm", "theme", "night", "sleep", "relax", "calm", "flute", "piano", "instrumental", "soul", "peace", "breeze", "melody", "soft"],
+  sad: ["sad", "pain", "po", "piriyadha", "kanne", "amma", "alone", "miss", "broken", "tear", "sogam", "marakkavillai"]
+};
+
+function findSongsByMood(moodKey) {
+  const hints = MOOD_KEYWORDS[moodKey] || [];
+  const scored = [];
+  tracks.forEach((t, idx) => {
+    const hay = (cleanDisplay(t.title) + " " + cleanDisplay(t.director)).toLowerCase();
+    let score = 0;
+    hints.forEach(h => { if (hay.includes(h)) score += 30; });
+    if (favs.includes(t.id)) score += 10;
+    if (score > 0) scored.push({ idx, score });
+  });
+  if (!scored.length) {
+    // Fall back to favourites or full library shuffled
+    const fallback = tracks.map((_, i) => i).sort(() => Math.random() - 0.5);
+    return fallback.slice(0, 5);
+  }
+  scored.sort((a, b) => b.score - a.score);
+  return scored.map(x => x.idx);
+}
+
 function findSongsByVoice(rawQuery) {
   const cleaned = rawQuery
     .replace(/^(hey\s+rishi|rishi|ok\s+rishi|ஹே\s+ரிஷி|ரிஷி)[,\s]*/i, "")
-    .replace(/\b(play|songs?|music|tracks?|by|from|of|the|my|please|podu|paattu|paadal|பாட்டு|பாடல்|பாடல்கள்|போடு)\b/gi, " ")
+    .replace(/\b(play|queue|build|create|give\s+me|some|songs?|music|tracks?|playlist|mix|by|from|of|the|my|please|podu|paattu|paadal|பாட்டு|பாடல்|பாடல்கள்|போடு)\b/gi, " ")
     .replace(/\s+/g, " ")
     .trim();
   if (!cleaned) return [];
@@ -1638,20 +1671,43 @@ function findSongsByVoice(rawQuery) {
   return scored.map(x => x.idx);
 }
 
-async function handleOnlineVoiceCommand(alts) {
+async function handleAdvancedOnlineCommand(alts) {
   const isTa = st.voiceLang === "ta-IN";
   const primary = alts[0] || "";
   const cmd = primary.toLowerCase().replace(/^(hey\s+rishi|rishi|ok\s+rishi)[,\s]*/i, "").trim();
 
-  if (/(what\s+song|which\s+song|current\s+song|now\s+playing|என்ன\s+பாட்டு)/.test(cmd)) {
+  // 1. Track insights / current song query
+  if (/(what\s+song|which\s+song|current\s+song|now\s+playing|who\s+composed|about\s+this|details|என்ன\s+பாட்டு)/.test(cmd)) {
     const t = tracks[cur];
-    speakDj(t
-      ? (isTa ? `இப்போது ${cleanDisplay(t.title)} ஒலிக்கிறது.` : `Now playing ${cleanDisplay(t.title)} by ${cleanDisplay(t.director)}.`)
-      : (isTa ? "இப்போது எந்தப் பாடலும் ஒலிக்கவில்லை." : "No song is playing right now."));
-    showDjCard(5000);
+    if (!t) {
+      speakDj(isTa ? "இப்போது எந்தப் பாடலும் ஒலிக்கவில்லை." : "No track is currently playing.");
+    } else {
+      const pCount = plays[t.id] || 1;
+      const isFav = favs.includes(t.id) ? " It is in your favourites." : "";
+      speakDj(isTa
+        ? `இப்போது ${cleanDisplay(t.title)} ஒலிக்கிறது. இசையமைப்பாளர் ${cleanDisplay(t.director)}.`
+        : `You're listening to ${cleanDisplay(t.title)}, composed by ${cleanDisplay(t.director)}. You've played it ${pCount} time${pCount > 1 ? "s" : ""}.${isFav}`);
+    }
+    showDjCard(6000);
     return;
   }
 
+  // 2. Add current song to favourites via voice
+  if (/(add\s+to\s+fav|like\s+this\s+song|favourite\s+this|love\s+this\s+song)/.test(cmd)) {
+    const t = tracks[cur];
+    if (t && !favs.includes(t.id)) {
+      favs.push(t.id);
+      jset("rishi_favs", favs);
+      refresh();
+      speakDj(`Added ${cleanDisplay(t.title)} to your favourites.`);
+    } else if (t) {
+      speakDj(`${cleanDisplay(t.title)} is already in your favourites.`);
+    }
+    showDjCard(4500);
+    return;
+  }
+
+  // 3. Playback transport controls
   if (/(pause|stop\s+music|stop\s+song|நிறுத்து)/.test(cmd)) {
     pause();
     speakDj(isTa ? "இசை நிறுத்தப்பட்டது." : "Music paused.");
@@ -1661,7 +1717,7 @@ async function handleOnlineVoiceCommand(alts) {
 
   if (/^(resume|continue|play\s+music|தொடர்)$/.test(cmd)) {
     play();
-    speakDj(isTa ? "பாடல் தொடர்கிறது." : "Resuming music.");
+    speakDj(isTa ? "பாடல் தொடர்கிறது." : "Resuming playback.");
     showDjCard(4000);
     return;
   }
@@ -1669,14 +1725,14 @@ async function handleOnlineVoiceCommand(alts) {
   if (/(next|skip|அடுத்த)/.test(cmd)) {
     await go(1);
     const t = tracks[cur];
-    speakDj(t ? `Playing next: ${cleanDisplay(t.title)}` : "Skipping to next song.");
+    speakDj(t ? `Up next: ${cleanDisplay(t.title)}` : "Skipping to next song.");
     showDjCard(4000);
     return;
   }
 
   if (/(previous|prev|back|முந்தைய)/.test(cmd)) {
     prevTrack();
-    speakDj(isTa ? "முந்தைய பாடல்." : "Playing previous song.");
+    speakDj(isTa ? "முந்தைய பாடல்." : "Going back to the previous track.");
     showDjCard(4000);
     return;
   }
@@ -1688,7 +1744,7 @@ async function handleOnlineVoiceCommand(alts) {
       const rnd = Math.floor(Math.random() * tracks.length);
       if (await load(rnd)) await play();
     }
-    speakDj(isTa ? "பிளேலிஸ்ட் ஷஃபிள் செய்யப்பட்டது." : "Playlist shuffled.");
+    speakDj(isTa ? "பிளேலிஸ்ட் ஷஃபிள் செய்யப்பட்டது." : "Shuffle mode enabled.");
     showDjCard(4000);
     return;
   }
@@ -1696,7 +1752,7 @@ async function handleOnlineVoiceCommand(alts) {
   if (/(increase\s+volume|volume\s+up|louder|சத்தம்\s+அதிகரி)/.test(cmd)) {
     const v = Math.min(100, +st.volume + 20);
     set({ volume: v }); sync();
-    speakDj(`Volume increased to ${v} percent.`);
+    speakDj(`Volume set to ${v} percent.`);
     showDjCard(4000);
     return;
   }
@@ -1704,11 +1760,18 @@ async function handleOnlineVoiceCommand(alts) {
   if (/(decrease\s+volume|volume\s+down|lower\s+volume|சத்தம்\s+குறை)/.test(cmd)) {
     const v = Math.max(10, +st.volume - 20);
     set({ volume: v }); sync();
-    speakDj(`Volume decreased to ${v} percent.`);
+    speakDj(`Volume lowered to ${v} percent.`);
     showDjCard(4000);
     return;
   }
 
+  if (!tracks.length) {
+    speakDj("Your library is empty. Please import some songs first.");
+    showDjCard(4500);
+    return;
+  }
+
+  // 4. Favourites smart queue
   if (/(favou?rite|liked|பிடித்த)/.test(cmd)) {
     const favIdx = tracks.map((t, i) => i).filter(i => favs.includes(tracks[i].id));
     if (!favIdx.length) {
@@ -1716,29 +1779,45 @@ async function handleOnlineVoiceCommand(alts) {
       showDjCard(4500);
       return;
     }
-    const pick = favIdx[Math.floor(Math.random() * favIdx.length)];
-    speakDj(`Playing favourite: ${cleanDisplay(tracks[pick].title)}`, async () => {
-      if (await load(pick)) await play();
+    const shuffled = [...favIdx].sort(() => Math.random() - 0.5);
+    smartQueue = shuffled.slice(1, 6);
+    speakDj(`Queued ${shuffled.length} favourite songs, starting with ${cleanDisplay(tracks[shuffled[0]].title)}.`, async () => {
+      if (await load(shuffled[0])) await play();
     });
-    showDjCard(5000);
+    showDjCard(5500);
     return;
   }
 
-  if (!tracks.length) {
-    speakDj("Your library is empty. Please import songs first.");
-    showDjCard(4500);
-    return;
+  // 5. Advanced AI Mood / Vibe / Smart Mix detection
+  const moodMap = [
+    { key: "romantic", rx: /(romantic|love|rainy|rain|date|heart|kadhal|melody)/ },
+    { key: "energetic", rx: /(energetic|workout|gym|party|dance|mass|kuthu|fast|pump)/ },
+    { key: "chill", rx: /(chill|relax|sleep|night|study|calm|peace|bgm|instrumental)/ },
+    { key: "sad", rx: /(sad|emotional|alone|broken|miss|cry)/ }
+  ];
+  for (const m of moodMap) {
+    if (m.rx.test(cmd)) {
+      const moodTracks = findSongsByMood(m.key).sort(() => Math.random() - 0.5);
+      smartQueue = moodTracks.slice(1, 6);
+      speakDj(`Created a ${m.key} mix for you. Starting with ${cleanDisplay(tracks[moodTracks[0]].title)}.`, async () => {
+        if (await load(moodTracks[0])) await play();
+      });
+      showDjCard(5500);
+      return;
+    }
   }
 
-  if (/^(play\s+a\s+song|play\s+music|play\s+anything|play|பாட்டு\s+போடு)$/.test(cmd)) {
+  // 6. Generic play request
+  if (/^(play\s+a\s+song|play\s+music|play\s+anything|play|surprise\s+me|பாட்டு\s+போடு)$/.test(cmd)) {
     const rnd = Math.floor(Math.random() * tracks.length);
-    speakDj(`Playing ${cleanDisplay(tracks[rnd].title)}`, async () => {
+    speakDj(`Playing ${cleanDisplay(tracks[rnd].title)} by ${cleanDisplay(tracks[rnd].director)}.`, async () => {
       if (await load(rnd)) await play();
     });
     showDjCard(5000);
     return;
   }
 
+  // 7. Exact Song or Music Director Match + Queue remaining matches
   let matches = [];
   for (const alt of alts) {
     matches = findSongsByVoice(alt);
@@ -1746,25 +1825,26 @@ async function handleOnlineVoiceCommand(alts) {
   }
 
   if (matches.length) {
-    if (matches.length > 1) { set({ shuffle: true }); sync(); }
-    const pick = matches[Math.floor(Math.random() * matches.length)];
-    speakDj(`Playing ${cleanDisplay(tracks[pick].title)}`, async () => {
-      if (await load(pick)) await play();
+    const first = matches[0];
+    smartQueue = matches.slice(1, 8);
+    const extraMsg = matches.length > 1 ? ` and queued ${Math.min(matches.length - 1, 7)} more` : "";
+    speakDj(`Playing ${cleanDisplay(tracks[first].title)}${extraMsg}.`, async () => {
+      if (await load(first)) await play();
     });
-    showDjCard(5000);
+    showDjCard(5500);
   } else {
     const rnd = Math.floor(Math.random() * tracks.length);
-    speakDj(`I couldn't find ${tamilToEnglishPhonetic(primary)}, playing ${cleanDisplay(tracks[rnd].title)} instead.`, async () => {
+    speakDj(`I couldn't find ${tamilToEnglishPhonetic(primary)}, so I'm playing ${cleanDisplay(tracks[rnd].title)} instead.`, async () => {
       if (await load(rnd)) await play();
     });
     showDjCard(5500);
   }
 }
 
-/* OFFLINE: Pure-JS Syllable & Cadence Command Executor */
-async function executeOfflineSyllableCommand(syllables, wasPlaying) {
+/* NORMAL OFFLINE MODE: Pure-JS Syllable & Cadence Command Executor (0 Internet) */
+async function executeNormalOfflineCommand(syllables, wasPlaying) {
   if (syllables <= 0) {
-    $("rvdj-reply").textContent = "No voice detected. Tap mic and speak clearly.";
+    $("rvdj-reply").textContent = "No voice detected. Double-tap AirPods or tap mic and speak.";
     showDjCard(3500);
     if (wasPlaying) play();
     return;
@@ -1801,7 +1881,7 @@ async function executeOfflineSyllableCommand(syllables, wasPlaying) {
   }
 }
 
-async function startOfflineCadenceListener(wasPlaying) {
+async function startNormalOfflineListener(wasPlaying) {
   try {
     offlineMicStream = await navigator.mediaDevices.getUserMedia({ audio: true });
     offlineAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -1814,8 +1894,8 @@ async function startOfflineCadenceListener(wasPlaying) {
     isListening = true;
     $("rvdj-widget").classList.add("listening");
     $("mic").classList.add("on");
-    $("rvdj-heard").textContent = "🎙️ Offline Mode (1=Play/Pause • 2=Next • 3=Prev • 4+=Random)";
-    $("rvdj-reply").textContent = "Speak your command now...";
+    $("rvdj-heard").textContent = "🎧 Normal Offline Mode (1=Play/Pause • 2=Next • 3=Prev • 4+=Random)";
+    $("rvdj-reply").textContent = "Speak into your AirPods or mic now...";
     showDjCard();
 
     let syllables = 0;
@@ -1848,7 +1928,7 @@ async function startOfflineCadenceListener(wasPlaying) {
 
       if ((syllables > 0 && now - lastVoiceTime > 1100) || (now - startTime > 5000)) {
         stopAllVoiceListeners();
-        executeOfflineSyllableCommand(syllables, wasPlaying);
+        executeNormalOfflineCommand(syllables, wasPlaying);
         return;
       }
       offlineRafId = requestAnimationFrame(detectLoop);
@@ -1863,7 +1943,7 @@ async function startOfflineCadenceListener(wasPlaying) {
   }
 }
 
-/* UNIFIED HYBRID ENTRYPOINT */
+/* UNIFIED HYBRID ENTRYPOINT (AIRPODS + SCREEN MIC) */
 function startHybridVoiceDj(targetSearchBar = false) {
   if (isListening) {
     stopAllVoiceListeners();
@@ -1875,13 +1955,13 @@ function startHybridVoiceDj(targetSearchBar = false) {
   if (wasPlaying) au.pause();
   try { window.speechSynthesis.cancel(); } catch (_) {}
 
-  // If offline or SpeechRecognition unavailable -> use Offline Cadence Engine
+  // Offline -> Normal Mode (0 internet)
   if (!navigator.onLine || !SR) {
-    startOfflineCadenceListener(wasPlaying);
+    startNormalOfflineListener(wasPlaying);
     return;
   }
 
-  // Online -> use SpeechRecognition to match the exact song or music director
+  // Online -> Advanced AI Mode (exact song, director, mood mix, queue, track details)
   onlineRec = new SR();
   onlineRec.lang = st.voiceLang === "ta-IN" ? "ta-IN" : "en-US";
   onlineRec.continuous = false;
@@ -1893,8 +1973,8 @@ function startHybridVoiceDj(targetSearchBar = false) {
     $("rvdj-widget").classList.add("listening");
     $("mic").classList.add("on");
     if (!targetSearchBar) {
-      $("rvdj-heard").textContent = st.voiceLang === "ta-IN" ? "🎙️ கேட்கிறேன்..." : "🎙️ Listening Online...";
-      $("rvdj-reply").textContent = "Say the exact song name, music director, or command";
+      $("rvdj-heard").textContent = st.voiceLang === "ta-IN" ? "🎧 கேட்கிறேன்..." : "🎧 Listening via AirPods / Mic...";
+      $("rvdj-reply").textContent = "Say a song, music director, mood (e.g. 'romantic mix'), or 'what song is this'";
       showDjCard();
     } else {
       $("q").placeholder = "Listening...";
@@ -1915,22 +1995,21 @@ function startHybridVoiceDj(targetSearchBar = false) {
       if (wasPlaying) play();
     } else {
       $("rvdj-heard").textContent = `You said: "${finalAlts[0]}"`;
-      handleOnlineVoiceCommand(finalAlts);
+      handleAdvancedOnlineCommand(finalAlts);
     }
   };
 
   onlineRec.onerror = err => {
     stopAllVoiceListeners();
     $("q").placeholder = "Search songs or directors...";
-    // Automatically fall back to Offline Cadence Engine if network drops mid-command
     if (err.error === "network") {
       updateNetworkModeBadge();
-      startOfflineCadenceListener(wasPlaying);
+      startNormalOfflineListener(wasPlaying);
       return;
     }
     $("rvdj-reply").textContent = err.error === "not-allowed"
       ? "Allow microphone access in Chrome."
-      : "Didn't catch that. Tap mic again.";
+      : "Didn't catch that. Double-tap AirPods or tap mic again.";
     showDjCard(4500);
     if (wasPlaying) play();
   };
@@ -1947,7 +2026,7 @@ function startHybridVoiceDj(targetSearchBar = false) {
     onlineRec.start();
   } catch (_) {
     stopAllVoiceListeners();
-    startOfflineCadenceListener(wasPlaying);
+    startNormalOfflineListener(wasPlaying);
   }
 }
 
@@ -1957,7 +2036,7 @@ $("startHybridVoiceBtn").onclick = () => { $("sm").classList.remove("open"); sta
 $("testVoiceBtn").onclick = () => {
   speakDj(st.voiceLang === "ta-IN"
     ? "வணக்கம்! நான் உங்கள் ரிஷி மியூசிக் குரல் உதவியாளர்."
-    : "Hello! I am Rishi, your hybrid ladies voice DJ.");
+    : "Hello! I am Rishi, connected to your AirPods in dual voice mode.");
 };
 
 $("rvdj-lang-toggle").onclick = () => {
