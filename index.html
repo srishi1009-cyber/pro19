@@ -228,9 +228,12 @@ body.compact #dock .sub, body.compact #prog { display:none; }
 #dock .sub { color:var(--mut); font-size:12px; }
 
 #liveLyricBar {
-  display:block;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:6px;
   margin:6px 0 4px;
-  padding:7px 12px;
+  padding:8px 12px;
   border-radius:12px;
   background:rgba(var(--rgb),.16);
   border:1px solid rgba(var(--rgb),.32);
@@ -238,9 +241,23 @@ body.compact #dock .sub, body.compact #prog { display:none; }
   font-size:13px;
   font-weight:800;
   text-align:center;
+  cursor:pointer;
+  transition:transform .15s,background .2s;
+}
+#liveLyricBar:active { transform:scale(.98); }
+#liveLyricBar .lyric-txt {
   white-space:nowrap;
   overflow:hidden;
   text-overflow:ellipsis;
+}
+#liveLyricBar .expand-pill {
+  flex:none;
+  font-size:10px;
+  font-weight:900;
+  padding:2px 7px;
+  border-radius:999px;
+  background:rgba(var(--rgb),.22);
+  letter-spacing:.4px;
 }
 body.hide-lyrics #liveLyricBar { display:none; }
 
@@ -250,6 +267,148 @@ input[type=range] { accent-color:var(--accent); flex:1; width:100%; }
 .ctl { display:flex; justify-content:center; align-items:center; gap:10px; }
 .ctl .on { color:var(--accent); border-color:var(--accent); }
 .play { width:52px; height:52px; font-size:21px; }
+
+/* FULL-SCREEN SYNCED LYRICS STUDIO + TAP-TO-SEEK */
+#lyricStudio {
+  position:fixed;
+  inset:0;
+  z-index:25;
+  display:none;
+  flex-direction:column;
+  background:var(--bg);
+  padding:calc(14px + env(safe-area-inset-top)) 18px calc(18px + env(safe-area-inset-bottom));
+  overflow:hidden;
+}
+#lyricStudio.open { display:flex; }
+
+.studio-glow {
+  position:absolute;
+  inset:-20%;
+  background:
+    radial-gradient(circle at 25% 20%, rgba(var(--rgb),.34), transparent 55%),
+    radial-gradient(circle at 80% 75%, rgba(124,77,255,.26), transparent 55%);
+  filter:blur(48px);
+  pointer-events:none;
+  z-index:0;
+}
+
+.studio-head,
+.studio-scroll,
+.studio-foot {
+  position:relative;
+  z-index:1;
+}
+
+.studio-head {
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding-bottom:12px;
+  border-bottom:1px solid var(--line);
+}
+.studio-meta { flex:1; min-width:0; }
+.studio-title {
+  font-size:18px;
+  font-weight:900;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.studio-sub {
+  font-size:12px;
+  color:var(--mut);
+  margin-top:2px;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+
+.studio-tools {
+  display:flex;
+  gap:6px;
+  margin-top:10px;
+  position:relative;
+  z-index:1;
+}
+.studio-tools .btn {
+  padding:6px 12px;
+  font-size:12px;
+  font-weight:700;
+}
+
+.studio-scroll {
+  flex:1;
+  overflow-y:auto;
+  padding:32vh 4px;
+  display:flex;
+  flex-direction:column;
+  gap:14px;
+  scroll-behavior:smooth;
+  mask-image:linear-gradient(to bottom, transparent 0%, black 14%, black 86%, transparent 100%);
+  -webkit-mask-image:linear-gradient(to bottom, transparent 0%, black 14%, black 86%, transparent 100%);
+}
+.studio-scroll::-webkit-scrollbar { display:none; }
+
+.s-line {
+  font-size:20px;
+  font-weight:700;
+  line-height:1.45;
+  color:var(--mut);
+  opacity:.52;
+  padding:8px 12px;
+  border-radius:14px;
+  transition:transform .22s ease, opacity .22s ease, color .22s ease, background .22s ease;
+  cursor:pointer;
+  user-select:none;
+}
+.s-line:hover {
+  opacity:.85;
+  background:rgba(var(--rgb),.08);
+}
+.s-line.past {
+  opacity:.36;
+}
+.s-line.active {
+  font-size:27px;
+  font-weight:900;
+  color:var(--text);
+  opacity:1;
+  background:rgba(var(--rgb),.16);
+  border:1px solid rgba(var(--rgb),.32);
+  box-shadow:0 8px 26px rgba(var(--rgb),.22);
+  transform:scale(1.02);
+}
+.s-line .s-ts {
+  display:inline-block;
+  font-size:11px;
+  font-weight:800;
+  color:var(--accent);
+  background:rgba(var(--rgb),.16);
+  padding:2px 7px;
+  border-radius:999px;
+  margin-right:8px;
+  vertical-align:middle;
+}
+.studio-empty {
+  text-align:center;
+  color:var(--mut);
+  font-size:15px;
+  line-height:1.6;
+  padding:30px 12px;
+}
+
+.studio-foot {
+  padding-top:12px;
+  border-top:1px solid var(--line);
+}
+.studio-prog {
+  display:flex;
+  align-items:center;
+  gap:8px;
+  font-size:11px;
+  color:var(--mut);
+  margin-bottom:10px;
+}
 
 /* FLOATING BLUE GLOSSY RISHI VOICE DJ */
 #rvdj-widget {
@@ -537,6 +696,38 @@ body.compact #rvdj-widget { bottom:calc(90px + env(safe-area-inset-bottom)); }
 <input type="file" id="files" accept="audio/*" multiple hidden>
 <audio id="au" preload="auto"></audio>
 
+<!-- FULL-SCREEN SYNCED LYRICS STUDIO + TAP-TO-SEEK -->
+<div id="lyricStudio" aria-hidden="true">
+  <div class="studio-glow"></div>
+
+  <div class="studio-head">
+    <button type="button" class="btn ic" id="closeStudioBtn" title="Close Lyrics Studio">⌄</button>
+    <div class="studio-meta">
+      <div class="studio-title" id="studioTitle">No track playing</div>
+      <div class="studio-sub" id="studioSub">Tap any timestamped lyric line to seek</div>
+    </div>
+    <button type="button" class="btn ic" id="studioSyncBtn" title="Sync Lyrics Online">🔄</button>
+    <button type="button" class="btn ic" id="studioImportBtn" title="Import .lrc file">📂</button>
+  </div>
+
+  <div class="studio-scroll" id="studioScroll">
+    <div class="studio-empty">Select a song to view synced lyrics.</div>
+  </div>
+
+  <div class="studio-foot">
+    <div class="studio-prog">
+      <span id="studioCur">0:00</span>
+      <input type="range" id="studioBar" min="0" max="100" step=".1" value="0">
+      <span id="studioDur">0:00</span>
+    </div>
+    <div class="ctl">
+      <button type="button" class="btn ic" id="studioPrev">⏮</button>
+      <button type="button" class="btn pri play" id="studioPlay">▶</button>
+      <button type="button" class="btn ic" id="studioNext">⏭</button>
+    </div>
+  </div>
+</div>
+
 <!-- FLOATING RISHI VOICE DJ (AIRPODS + OFFLINE NORMAL / ONLINE ADVANCED AI) -->
 <div id="rvdj-widget">
   <div id="rvdj-card">
@@ -557,7 +748,10 @@ body.compact #rvdj-widget { bottom:calc(90px + env(safe-area-inset-bottom)); }
 <div id="dock">
   <div class="t" id="dT">No track playing</div>
   <div class="sub" id="dS">Select a song from your library</div>
-  <div id="liveLyricBar">♪ Synced lyrics ready</div>
+  <div id="liveLyricBar" title="Tap to open Full-Screen Lyrics Studio">
+    <span class="lyric-txt" id="liveLyricTxt">♪ Synced lyrics ready</span>
+    <span class="expand-pill">LYRICS ⤢</span>
+  </div>
 
   <div id="prog">
     <span id="cur">0:00</span>
@@ -618,9 +812,9 @@ body.compact #rvdj-widget { bottom:calc(90px + env(safe-area-inset-bottom)); }
       </div>
     </div>
 
-    <h3>🎤 Synced Lyrics</h3>
+    <h3>🎤 Synced Lyrics Studio</h3>
     <div class="set">
-      <label>Show lyrics in player</label>
+      <label>Show lyrics bar in player</label>
       <input type="checkbox" class="sw" id="showLyrics">
     </div>
     <div class="set">
@@ -630,6 +824,7 @@ body.compact #rvdj-widget { bottom:calc(90px + env(safe-area-inset-bottom)); }
     <div class="lyrics-settings-box">
       <div class="row" style="margin-bottom:6px;flex-wrap:wrap">
         <div class="sb" id="lyricsTrackName" style="flex:1;font-weight:700">No track selected</div>
+        <button type="button" class="btn" id="openStudioFromSettingsBtn" style="padding:5px 11px;font-size:12px">⤢ Full Screen</button>
         <button type="button" class="btn" id="fetchLyricsNowBtn" style="padding:5px 11px;font-size:12px">🔄 Sync Online</button>
         <button type="button" class="btn pri" id="importLrcBtn" style="padding:5px 11px;font-size:12px">📂 Import .lrc</button>
       </div>
@@ -972,7 +1167,7 @@ function markPlayedToday(id) {
   refresh();
 }
 
-/* 7. STATE & LYRICS ENGINE (ONLINE LRCLIB + OFFLINE .LRC IMPORTER) */
+/* 7. FULL-SCREEN SYNCED LYRICS STUDIO + TAP-TO-SEEK */
 let tracks = [];
 let cur = -1;
 let url = null;
@@ -984,6 +1179,9 @@ let favs = jget("rishi_favs", []);
 let plays = jget("rishi_plays", {});
 let recent = jget("rishi_recent", []);
 let lyricsMap = jget("rishi_lyrics_v1", {});
+
+const added = t => +(/^track_(\d+)_/.exec(t.id) || [0, 0])[1];
+const fmt = s => !isFinite(s) || s < 0 ? "0:00" : Math.floor(s / 60) + ":" + String(Math.floor(s % 60)).padStart(2, "0");
 
 function parseLyrics(raw) {
   if (!raw) return [];
@@ -998,25 +1196,69 @@ function parseLyrics(raw) {
 }
 
 let lastActiveLyricIdx = -1;
+let lastRenderedTrackId = null;
+
+function renderStudioLyrics(t, lines, activeIdx, rebuildAll) {
+  const studioTitle = $("studioTitle");
+  const studioSub = $("studioSub");
+  const studioScroll = $("studioScroll");
+
+  if (!t) {
+    studioTitle.textContent = "No track playing";
+    studioSub.textContent = "Select a song to view synced lyrics";
+    studioScroll.innerHTML = '<div class="studio-empty">Select a song from your library to view synced lyrics.</div>';
+    return;
+  }
+
+  studioTitle.textContent = cleanDisplay(t.title);
+  studioSub.textContent = `${cleanDisplay(t.director)} • Tap any timestamped line to seek`;
+
+  if (!lines.length) {
+    studioScroll.innerHTML = `<div class="studio-empty">No synced lyrics yet for <b>${esc(cleanDisplay(t.title))}</b>.<br><br>Tap <b>🔄 Sync Online</b> or <b>📂 Import .lrc</b> above.</div>`;
+    return;
+  }
+
+  if (rebuildAll || lastRenderedTrackId !== t.id || studioScroll.children.length !== lines.length) {
+    lastRenderedTrackId = t.id;
+    studioScroll.innerHTML = lines.map((x, idx) => {
+      const cls = idx === activeIdx ? "s-line active" : (idx < activeIdx ? "s-line past" : "s-line");
+      const tsAttr = x.time !== null ? `data-time="${x.time}"` : "";
+      const tsBadge = x.time !== null ? `<span class="s-ts">${fmt(x.time)}</span>` : "";
+      return `<div class="${cls}" data-idx="${idx}" ${tsAttr}>${tsBadge}${esc(x.text)}</div>`;
+    }).join("");
+  } else {
+    [...studioScroll.children].forEach((el, idx) => {
+      el.classList.toggle("active", idx === activeIdx);
+      el.classList.toggle("past", idx < activeIdx);
+    });
+  }
+
+  const activeEl = studioScroll.children[activeIdx];
+  if (activeEl && $("lyricStudio").classList.contains("open")) {
+    activeEl.scrollIntoView({ block: "center", behavior: "smooth" });
+  }
+}
 
 function updateSyncedLyrics(forceScroll = false) {
   const t = tracks[cur];
-  const bar = $("liveLyricBar");
+  const barTxt = $("liveLyricTxt");
   const prev = $("settingsLiveLyric");
   const list = $("settingsLyricsList");
 
   if (!t) {
-    bar.textContent = "♪ Synced lyrics ready";
+    barTxt.textContent = "♪ Synced lyrics ready";
     prev.textContent = "Play any song to show synced lyrics";
     list.innerHTML = "";
+    renderStudioLyrics(null, [], -1, true);
     return;
   }
 
   const lines = parseLyrics(lyricsMap[t.id]);
   if (!lines.length) {
-    bar.textContent = `♪ ${cleanDisplay(t.title)} — ${cleanDisplay(t.director)}`;
+    barTxt.textContent = `♪ ${cleanDisplay(t.title)} — ${cleanDisplay(t.director)}`;
     prev.textContent = "Lyrics ready when synced or imported (.lrc)";
     list.innerHTML = "";
+    renderStudioLyrics(t, [], -1, true);
     return;
   }
 
@@ -1030,18 +1272,64 @@ function updateSyncedLyrics(forceScroll = false) {
   }
 
   const activeText = lines[activeIdx].text;
-  bar.textContent = `♪ ${activeText}`;
+  barTxt.textContent = `♪ ${activeText}`;
   prev.textContent = activeText;
 
-  if (forceScroll || activeIdx !== lastActiveLyricIdx) {
+  if (forceScroll || activeIdx !== lastActiveLyricIdx || lastRenderedTrackId !== t.id) {
+    const rebuild = forceScroll || lastRenderedTrackId !== t.id;
     lastActiveLyricIdx = activeIdx;
+
     list.innerHTML = lines.map((x, idx) =>
       `<div class="${idx === activeIdx ? "active-line" : ""}">${esc(x.text)}</div>`
     ).join("");
     const el = list.querySelector(".active-line");
     if (el) el.scrollIntoView({ block: "nearest", behavior: "smooth" });
+
+    renderStudioLyrics(t, lines, activeIdx, rebuild);
   }
 }
+
+/* Open & Close Full-Screen Lyrics Studio */
+function openLyricStudio() {
+  $("sm").classList.remove("open");
+  $("lyricStudio").classList.add("open");
+  $("lyricStudio").setAttribute("aria-hidden", "false");
+  lastRenderedTrackId = null;
+  updateSyncedLyrics(true);
+}
+
+function closeLyricStudio() {
+  $("lyricStudio").classList.remove("open");
+  $("lyricStudio").setAttribute("aria-hidden", "true");
+}
+
+$("liveLyricBar").onclick = openLyricStudio;
+$("openStudioFromSettingsBtn").onclick = openLyricStudio;
+$("closeStudioBtn").onclick = closeLyricStudio;
+
+/* Tap-to-Seek inside Full-Screen Lyrics Studio */
+$("studioScroll").onclick = e => {
+  const lineEl = e.target.closest(".s-line");
+  if (!lineEl) return;
+  const tSec = Number(lineEl.dataset.time);
+  if (isFinite(tSec) && au.duration) {
+    au.currentTime = Math.max(0, Math.min(au.duration - 0.1, tSec));
+    if (au.paused) play();
+    updateSyncedLyrics(true);
+  }
+};
+
+$("studioBar").oninput = () => {
+  if (au.duration) {
+    au.currentTime = $("studioBar").value / 100 * au.duration;
+    updateSyncedLyrics(true);
+  }
+};
+$("studioPlay").onclick = () => au.paused ? play() : pause();
+$("studioPrev").onclick = prevTrack;
+$("studioNext").onclick = () => go(1);
+$("studioSyncBtn").onclick = () => { if (tracks[cur]) fetchLyricsAutomatically(tracks[cur], true); };
+$("studioImportBtn").onclick = () => $("importLrcBtn").click();
 
 async function fetchLyricsAutomatically(track, force = false) {
   if (!track) return;
@@ -1050,6 +1338,7 @@ async function fetchLyricsAutomatically(track, force = false) {
 
   if (!force && lyricsMap[track.id]) {
     lastActiveLyricIdx = -1;
+    lastRenderedTrackId = null;
     updateSyncedLyrics(true);
     return;
   }
@@ -1058,12 +1347,13 @@ async function fetchLyricsAutomatically(track, force = false) {
   const artistClean = track.director && track.director !== "UNKNOWN DIRECTOR" ? cleanDisplay(track.director) : "";
 
   if (!navigator.onLine) {
-    $("liveLyricBar").textContent = `♪ ${titleClean} (Offline — tap Import .lrc in Settings)`;
+    $("liveLyricTxt").textContent = `♪ ${titleClean} (Offline — tap to import .lrc)`;
     $("settingsLiveLyric").textContent = "Offline — use 'Import .lrc' to load lyrics without internet";
+    renderStudioLyrics(track, [], -1, true);
     return;
   }
 
-  $("liveLyricBar").textContent = `🔍 Fetching lyrics for ${titleClean}...`;
+  $("liveLyricTxt").textContent = `🔍 Fetching lyrics for ${titleClean}...`;
   $("settingsLiveLyric").textContent = `🔍 Searching lyrics for "${titleClean}"...`;
 
   try {
@@ -1079,14 +1369,16 @@ async function fetchLyricsAutomatically(track, force = false) {
         lyricsMap[track.id] = match.syncedLyrics || match.plainLyrics;
         jset("rishi_lyrics_v1", lyricsMap);
         lastActiveLyricIdx = -1;
+        lastRenderedTrackId = null;
         updateSyncedLyrics(true);
         return;
       }
     }
     $("settingsLiveLyric").textContent = "No online match found — tap 'Import .lrc' to add manually";
   } catch (_) {
-    $("liveLyricBar").textContent = `♪ ${titleClean} — ${cleanDisplay(track.director)}`;
+    $("liveLyricTxt").textContent = `♪ ${titleClean} — ${cleanDisplay(track.director)}`;
     $("settingsLiveLyric").textContent = "Server unreachable — tap 'Import .lrc' for offline lyrics";
+    renderStudioLyrics(track, [], -1, true);
     return;
   }
 
@@ -1113,6 +1405,7 @@ lrcFileInput.onchange = async e => {
   lyricsMap[tracks[cur].id] = text;
   jset("rishi_lyrics_v1", lyricsMap);
   lastActiveLyricIdx = -1;
+  lastRenderedTrackId = null;
   updateSyncedLyrics(true);
 };
 
@@ -1121,9 +1414,6 @@ $("fetchLyricsNowBtn").onclick = () => {
 };
 
 /* 8. LIBRARY & RENDERING */
-const added = t => +(/^track_(\d+)_/.exec(t.id) || [0, 0])[1];
-const fmt = s => !isFinite(s) || s < 0 ? "0:00" : Math.floor(s / 60) + ":" + String(Math.floor(s % 60)).padStart(2, "0");
-
 function compute() {
   const rawQ = $("q").value.trim().toLowerCase();
   const cleanQ = normSearch(rawQ);
@@ -1275,8 +1565,10 @@ async function load(i, preUrl) {
   $("dT").textContent = t.title;
   $("dS").textContent = t.director;
   $("bar").value = 0;
+  $("studioBar").value = 0;
   if (pre && pre.url !== u) URL.revokeObjectURL(pre.url);
   pre = null;
+  lastRenderedTrackId = null;
   media(t);
   fetchLyricsAutomatically(t);
   return true;
@@ -1296,7 +1588,9 @@ async function play() {
 function pause() { au.pause(); syncIcons(); }
 
 function syncIcons() {
-  $("play").textContent = au.paused ? "▶" : "❚❚";
+  const icon = au.paused ? "▶" : "❚❚";
+  $("play").textContent = icon;
+  $("studioPlay").textContent = icon;
   if ("mediaSession" in navigator) {
     navigator.mediaSession.playbackState = au.paused ? "paused" : "playing";
   }
@@ -1352,9 +1646,13 @@ au.ontimeupdate = () => {
   const d = au.duration;
   const t = au.currentTime;
   if (!d) return;
-  $("bar").value = t / d * 100;
+  const pct = t / d * 100;
+  $("bar").value = pct;
+  $("studioBar").value = pct;
   $("cur").textContent = fmt(t);
   $("dur").textContent = fmt(d);
+  $("studioCur").textContent = fmt(t);
+  $("studioDur").textContent = fmt(d);
   updateSyncedLyrics();
 
   if (st.remember && Date.now() - lastSave > 3000) {
@@ -1604,7 +1902,6 @@ function stopAllVoiceListeners() {
   if (offlineMicStream) { offlineMicStream.getTracks().forEach(t => t.stop()); offlineMicStream = null; }
 }
 
-/* ADVANCED ONLINE AI: Fuzzy Song/Director + Mood/Vibe + Smart Queue + Track Insights */
 const MOOD_KEYWORDS = {
   romantic: ["love", "kadhal", "kaadhal", "kanave", "munbe", "vaseegara", "nenjukkul", "ennai", "anbe", "uyire", "heart", "mazhai", "rain", "poove", "thuli"],
   energetic: ["kuthu", "vaathi", "arabic", "verithanam", "mass", "beat", "dance", "party", "workout", "gym", "beast", "vikram", "rowdy", "fire", "adchi", "bloody"],
@@ -1623,9 +1920,7 @@ function findSongsByMood(moodKey) {
     if (score > 0) scored.push({ idx, score });
   });
   if (!scored.length) {
-    // Fall back to favourites or full library shuffled
-    const fallback = tracks.map((_, i) => i).sort(() => Math.random() - 0.5);
-    return fallback.slice(0, 5);
+    return tracks.map((_, i) => i).sort(() => Math.random() - 0.5).slice(0, 5);
   }
   scored.sort((a, b) => b.score - a.score);
   return scored.map(x => x.idx);
@@ -1676,7 +1971,13 @@ async function handleAdvancedOnlineCommand(alts) {
   const primary = alts[0] || "";
   const cmd = primary.toLowerCase().replace(/^(hey\s+rishi|rishi|ok\s+rishi)[,\s]*/i, "").trim();
 
-  // 1. Track insights / current song query
+  if (/(show\s+lyrics|open\s+lyrics|full\s+lyrics|lyrics\s+screen)/.test(cmd)) {
+    openLyricStudio();
+    speakDj("Opening full-screen lyrics studio.", () => play());
+    showDjCard(4000);
+    return;
+  }
+
   if (/(what\s+song|which\s+song|current\s+song|now\s+playing|who\s+composed|about\s+this|details|என்ன\s+பாட்டு)/.test(cmd)) {
     const t = tracks[cur];
     if (!t) {
@@ -1692,7 +1993,6 @@ async function handleAdvancedOnlineCommand(alts) {
     return;
   }
 
-  // 2. Add current song to favourites via voice
   if (/(add\s+to\s+fav|like\s+this\s+song|favourite\s+this|love\s+this\s+song)/.test(cmd)) {
     const t = tracks[cur];
     if (t && !favs.includes(t.id)) {
@@ -1707,7 +2007,6 @@ async function handleAdvancedOnlineCommand(alts) {
     return;
   }
 
-  // 3. Playback transport controls
   if (/(pause|stop\s+music|stop\s+song|நிறுத்து)/.test(cmd)) {
     pause();
     speakDj(isTa ? "இசை நிறுத்தப்பட்டது." : "Music paused.");
@@ -1771,7 +2070,6 @@ async function handleAdvancedOnlineCommand(alts) {
     return;
   }
 
-  // 4. Favourites smart queue
   if (/(favou?rite|liked|பிடித்த)/.test(cmd)) {
     const favIdx = tracks.map((t, i) => i).filter(i => favs.includes(tracks[i].id));
     if (!favIdx.length) {
@@ -1788,7 +2086,6 @@ async function handleAdvancedOnlineCommand(alts) {
     return;
   }
 
-  // 5. Advanced AI Mood / Vibe / Smart Mix detection
   const moodMap = [
     { key: "romantic", rx: /(romantic|love|rainy|rain|date|heart|kadhal|melody)/ },
     { key: "energetic", rx: /(energetic|workout|gym|party|dance|mass|kuthu|fast|pump)/ },
@@ -1807,7 +2104,6 @@ async function handleAdvancedOnlineCommand(alts) {
     }
   }
 
-  // 6. Generic play request
   if (/^(play\s+a\s+song|play\s+music|play\s+anything|play|surprise\s+me|பாட்டு\s+போடு)$/.test(cmd)) {
     const rnd = Math.floor(Math.random() * tracks.length);
     speakDj(`Playing ${cleanDisplay(tracks[rnd].title)} by ${cleanDisplay(tracks[rnd].director)}.`, async () => {
@@ -1817,7 +2113,6 @@ async function handleAdvancedOnlineCommand(alts) {
     return;
   }
 
-  // 7. Exact Song or Music Director Match + Queue remaining matches
   let matches = [];
   for (const alt of alts) {
     matches = findSongsByVoice(alt);
@@ -1841,7 +2136,7 @@ async function handleAdvancedOnlineCommand(alts) {
   }
 }
 
-/* NORMAL OFFLINE MODE: Pure-JS Syllable & Cadence Command Executor (0 Internet) */
+/* NORMAL OFFLINE MODE */
 async function executeNormalOfflineCommand(syllables, wasPlaying) {
   if (syllables <= 0) {
     $("rvdj-reply").textContent = "No voice detected. Double-tap AirPods or tap mic and speak.";
@@ -1943,7 +2238,7 @@ async function startNormalOfflineListener(wasPlaying) {
   }
 }
 
-/* UNIFIED HYBRID ENTRYPOINT (AIRPODS + SCREEN MIC) */
+/* UNIFIED HYBRID ENTRYPOINT */
 function startHybridVoiceDj(targetSearchBar = false) {
   if (isListening) {
     stopAllVoiceListeners();
@@ -1955,13 +2250,11 @@ function startHybridVoiceDj(targetSearchBar = false) {
   if (wasPlaying) au.pause();
   try { window.speechSynthesis.cancel(); } catch (_) {}
 
-  // Offline -> Normal Mode (0 internet)
   if (!navigator.onLine || !SR) {
     startNormalOfflineListener(wasPlaying);
     return;
   }
 
-  // Online -> Advanced AI Mode (exact song, director, mood mix, queue, track details)
   onlineRec = new SR();
   onlineRec.lang = st.voiceLang === "ta-IN" ? "ta-IN" : "en-US";
   onlineRec.continuous = false;
@@ -1974,7 +2267,7 @@ function startHybridVoiceDj(targetSearchBar = false) {
     $("mic").classList.add("on");
     if (!targetSearchBar) {
       $("rvdj-heard").textContent = st.voiceLang === "ta-IN" ? "🎧 கேட்கிறேன்..." : "🎧 Listening via AirPods / Mic...";
-      $("rvdj-reply").textContent = "Say a song, music director, mood (e.g. 'romantic mix'), or 'what song is this'";
+      $("rvdj-reply").textContent = "Say a song, music director, mood (e.g. 'romantic mix'), or 'show lyrics'";
       showDjCard();
     } else {
       $("q").placeholder = "Listening...";
