@@ -917,7 +917,7 @@ body.compact #rvdj-widget { bottom:calc(90px + env(safe-area-inset-bottom)); }
     </div>
     <div class="lyrics-settings-box">
       <div class="sb" id="offlineModelStatus" style="margin-bottom:8px;font-weight:700;line-height:1.5">
-        ✅ Original Studio Sound Active (Background Playback Guard Enabled)
+        ✅ Original Studio Sound Active (48-Hour Smooth Background Playback)
       </div>
       <div class="row" style="flex-wrap:wrap">
         <button type="button" class="btn pri" id="testVoiceBtn" style="padding:8px 14px;font-size:13px">
@@ -1625,7 +1625,7 @@ function scoreLyricCandidate(cand, targetTitle, targetArtist, trackDur) {
     const aSkel = skeleton(targetArtist);
     const caSkel = skeleton(candArtist + " " + candAlbum);
     if (aNorm && caNorm.includes(aNorm)) score += 65;
-    else if (aSkel && caSkel.includes(aSkel)) score += 50;
+    else if (aSkel && caSkel.includes(caSkel)) score += 50;
   }
 
   if (trackDur > 0 && cand.duration > 0) {
@@ -1906,6 +1906,7 @@ function render() {
 }
 
 function refresh() {
+  if (document.hidden) return;
   const y = scrollY;
   const n = shown;
   compute();
@@ -2098,6 +2099,7 @@ au.onended = () => {
 au.onerror = () => { if (!busy && tracks[cur]) go(1); };
 
 au.ontimeupdate = () => {
+  if (document.hidden) return;
   const d = au.duration;
   const t = au.currentTime;
   if (!d) return;
@@ -2115,6 +2117,14 @@ au.ontimeupdate = () => {
     jset("rishi_pos", { id: tracks[cur]?.id, t });
   }
 };
+
+document.addEventListener("visibilitychange", () => {
+  if (!document.hidden) {
+    syncIcons();
+    updateSyncedLyrics(true);
+    if (!au.paused) requestWakeLock();
+  }
+});
 
 $("bar").oninput = () => {
   if (au.duration) {
@@ -2703,7 +2713,7 @@ async function startNormalOfflineListener(wasPlaying) {
         if (!inVoicePeak) {
           inVoicePeak = true;
           syllables++;
-          $("rvdj-heard").textContent = `Offline detected ${syllables} beat(s)...`;
+          $("rvdj-heard").textContent = `Offline detected ${syll syllables} beat(s)...`;
         }
       } else if (rms < 0.025) {
         inVoicePeak = false;
@@ -3016,7 +3026,7 @@ installBtn.onclick = async () => {
 };
 addEventListener("appinstalled", () => { LS.setItem("rishi_pwa_installed", "true"); installBtn.style.display = "none"; });
 
-/* KEEP MEDIA SESSION & WAKE LOCK ACTIVE WHEN SWITCHING APPS */
+/* KEEP MEDIA SESSION ACTIVE */
 document.addEventListener("visibilitychange", () => {
   if (document.visibilityState === "visible" && !au.paused) {
     requestWakeLock();
