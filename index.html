@@ -4,23 +4,23 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#08090d">
+<meta name="theme-color" content="#070b16">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Rishi Music">
 
 <link rel="manifest" href="./manifest.json">
-<link rel="icon" href="./icon-192.png">
-<link rel="apple-touch-icon" href="./icon-192.png">
+<link rel="icon" type="image/png" sizes="512x512" href="./icon-512.png">
+<link rel="apple-touch-icon" href="./icon-512.png">
 
-<title>RISHI MUSIC — Studio &amp; Hybrid AI</title>
+<title>RISHI MUSIC</title>
 
 <style>
 :root {
   --accent:#1d72fe;
   --rgb:29,114,254;
-  --bg:#08090d;
+  --bg:#070b16;
   --card:#141720;
   --text:#eef1f8;
   --mut:#8b93a7;
@@ -268,7 +268,7 @@ input[type=range] { accent-color:var(--accent); flex:1; width:100%; }
 .ctl .on { color:var(--accent); border-color:var(--accent); }
 .play { width:52px; height:52px; font-size:21px; }
 
-/* FULL-SCREEN SYNCED LYRICS STUDIO + TAP-TO-SEEK */
+/* FULL-SCREEN SYNCED LYRICS STUDIO + TAP-TO-SEEK + VERSION PICKER */
 #lyricStudio {
   position:fixed;
   inset:0;
@@ -293,6 +293,7 @@ input[type=range] { accent-color:var(--accent); flex:1; width:100%; }
 }
 
 .studio-head,
+.studio-tools,
 .studio-scroll,
 .studio-foot {
   position:relative;
@@ -302,9 +303,8 @@ input[type=range] { accent-color:var(--accent); flex:1; width:100%; }
 .studio-head {
   display:flex;
   align-items:center;
-  gap:10px;
-  padding-bottom:12px;
-  border-bottom:1px solid var(--line);
+  gap:8px;
+  padding-bottom:10px;
 }
 .studio-meta { flex:1; min-width:0; }
 .studio-title {
@@ -323,10 +323,33 @@ input[type=range] { accent-color:var(--accent); flex:1; width:100%; }
   text-overflow:ellipsis;
 }
 
+.studio-tools {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:6px;
+  padding:8px 0 10px;
+  border-top:1px solid var(--line);
+  border-bottom:1px solid var(--line);
+  flex-wrap:wrap;
+}
+.studio-tools .btn {
+  padding:5px 10px;
+  font-size:11px;
+  font-weight:700;
+}
+.offset-pill {
+  font-size:11px;
+  font-weight:800;
+  color:var(--accent);
+  min-width:44px;
+  text-align:center;
+}
+
 .studio-scroll {
   flex:1;
   overflow-y:auto;
-  padding:32vh 4px;
+  padding:30vh 4px;
   display:flex;
   flex-direction:column;
   gap:14px;
@@ -382,6 +405,39 @@ input[type=range] { accent-color:var(--accent); flex:1; width:100%; }
   font-size:15px;
   line-height:1.6;
   padding:30px 12px;
+}
+
+.lyric-cand {
+  background:var(--card);
+  border:1px solid var(--line);
+  border-radius:14px;
+  padding:12px;
+  margin-bottom:8px;
+  cursor:pointer;
+  transition:border-color .15s, transform .15s;
+}
+.lyric-cand:active { transform:scale(.98); }
+.lyric-cand:hover { border-color:var(--accent); }
+.lyric-cand-top {
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:8px;
+  font-weight:800;
+  font-size:14px;
+}
+.lyric-cand-sub {
+  font-size:12px;
+  color:var(--mut);
+  margin-top:4px;
+}
+.lyric-cand-snippet {
+  font-size:12px;
+  color:var(--accent);
+  margin-top:6px;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
 }
 
 .studio-foot {
@@ -711,9 +767,9 @@ body.compact #rvdj-widget { bottom:calc(90px + env(safe-area-inset-bottom)); }
 <div id="list"></div>
 
 <input type="file" id="files" accept="audio/*" multiple hidden>
-<audio id="au" preload="auto"></audio>
+<audio id="au" preload="auto" playsinline webkit-playsinline></audio>
 
-<!-- FULL-SCREEN SYNCED LYRICS STUDIO + TAP-TO-SEEK -->
+<!-- FULL-SCREEN ADVANCED LYRICS STUDIO + TAP-TO-SEEK + VERSION PICKER -->
 <div id="lyricStudio" aria-hidden="true">
   <div class="studio-glow"></div>
 
@@ -723,8 +779,20 @@ body.compact #rvdj-widget { bottom:calc(90px + env(safe-area-inset-bottom)); }
       <div class="studio-title" id="studioTitle">No track playing</div>
       <div class="studio-sub" id="studioSub">Tap any timestamped lyric line to seek</div>
     </div>
-    <button type="button" class="btn ic" id="studioSyncBtn" title="Sync Lyrics Online">🔄</button>
+    <button type="button" class="btn ic" id="studioSyncBtn" title="Auto-Match Exact Lyrics">🔄</button>
     <button type="button" class="btn ic" id="studioImportBtn" title="Import .lrc file">📂</button>
+  </div>
+
+  <div class="studio-tools">
+    <div class="row" style="gap:4px">
+      <button type="button" class="btn" id="lyricDelayMinus" title="Shift lyrics earlier">−0.5s</button>
+      <span class="offset-pill" id="lyricOffsetBadge">0.0s</span>
+      <button type="button" class="btn" id="lyricDelayPlus" title="Shift lyrics later">+0.5s</button>
+    </div>
+    <div class="row" style="gap:5px">
+      <button type="button" class="btn" id="studioPickBtn">🎯 Versions</button>
+      <button type="button" class="btn" id="studioClearBtn">🗑️ Clear</button>
+    </div>
   </div>
 
   <div class="studio-scroll" id="studioScroll">
@@ -745,7 +813,23 @@ body.compact #rvdj-widget { bottom:calc(90px + env(safe-area-inset-bottom)); }
   </div>
 </div>
 
-<!-- FLOATING RISHI VOICE DJ (AIRPODS + OFFLINE NORMAL / ONLINE ADVANCED AI) -->
+<!-- LYRIC VERSION PICKER MODAL -->
+<div class="modal" id="lyricPickerModal" style="z-index:35">
+  <div class="panel">
+    <div class="row" style="margin-bottom:8px">
+      <h2 style="flex:1">🎯 Choose Exact Lyrics</h2>
+      <button type="button" class="btn ic" id="closePickerBtn">✕</button>
+    </div>
+    <div class="row" style="margin-bottom:10px">
+      <input id="pickerSearchInput" style="flex:1;padding:10px 13px;border-radius:12px;border:1px solid var(--line);background:var(--card);outline:none" placeholder="Search song or movie name...">
+      <button type="button" class="btn pri" id="pickerSearchBtn">Search</button>
+    </div>
+    <div class="sb" id="pickerStatus" style="margin-bottom:10px">Searching matching lyric versions...</div>
+    <div id="pickerResults"></div>
+  </div>
+</div>
+
+<!-- FLOATING RISHI VOICE DJ -->
 <div id="rvdj-widget">
   <div id="rvdj-card">
     <div class="rvdj-head">
@@ -793,30 +877,6 @@ body.compact #rvdj-widget { bottom:calc(90px + env(safe-area-inset-bottom)); }
       <button class="btn ic" id="sx">✕</button>
     </div>
 
-    <h3>🎛️ Audio DSP &amp; Sound Studio</h3>
-    <div class="set">
-      <label>Sound &amp; EQ Preset</label>
-      <select id="dspPreset">
-        <option value="flat">Flat (Original)</option>
-        <option value="bass">🔊 Bass Boost</option>
-        <option value="vocal">🎤 Vocal Clarity</option>
-        <option value="concert">🏟️ Concert Hall</option>
-        <option value="slowed">🌊 Slowed + Reverb (0.85x)</option>
-      </select>
-    </div>
-    <div class="set">
-      <label>8D Spatial Audio (Auto-Pan)</label>
-      <input type="checkbox" class="sw" id="spatial8d">
-    </div>
-    <div class="set">
-      <label>Karaoke Vocal Remover</label>
-      <input type="checkbox" class="sw" id="karaokeMode">
-    </div>
-    <div class="set">
-      <label>Volume Normalization</label>
-      <input type="checkbox" class="sw" id="normalizeAudio">
-    </div>
-
     <h3>⏰ Smart Sleep Timer &amp; Hands-Free</h3>
     <div class="set">
       <label>Sleep Timer <span id="sleepCountdown" style="color:var(--accent);font-weight:700"></span></label>
@@ -857,7 +917,7 @@ body.compact #rvdj-widget { bottom:calc(90px + env(safe-area-inset-bottom)); }
     </div>
     <div class="lyrics-settings-box">
       <div class="sb" id="offlineModelStatus" style="margin-bottom:8px;font-weight:700;line-height:1.5">
-        ✅ Dual Mode Active: Online = Advanced AI (exact song, mood, smart queue, track info) • Offline = Normal (1/2/3/4+ beats)
+        ✅ Original Studio Sound Active (Background Playback Guard Enabled)
       </div>
       <div class="row" style="flex-wrap:wrap">
         <button type="button" class="btn pri" id="testVoiceBtn" style="padding:8px 14px;font-size:13px">
@@ -869,21 +929,23 @@ body.compact #rvdj-widget { bottom:calc(90px + env(safe-area-inset-bottom)); }
       </div>
     </div>
 
-    <h3>🎤 Synced Lyrics Studio</h3>
+    <h3>🎤 Advanced Synced Lyrics Studio</h3>
     <div class="set">
       <label>Show lyrics bar in player</label>
       <input type="checkbox" class="sw" id="showLyrics">
     </div>
     <div class="set">
-      <label>Auto-fetch lyrics when online</label>
+      <label>Auto-fetch exact lyrics when online</label>
       <input type="checkbox" class="sw" id="autoLyricsToggle">
     </div>
     <div class="lyrics-settings-box">
       <div class="row" style="margin-bottom:6px;flex-wrap:wrap">
         <div class="sb" id="lyricsTrackName" style="flex:1;font-weight:700">No track selected</div>
-        <button type="button" class="btn" id="openStudioFromSettingsBtn" style="padding:5px 11px;font-size:12px">⤢ Full Screen</button>
-        <button type="button" class="btn" id="fetchLyricsNowBtn" style="padding:5px 11px;font-size:12px">🔄 Sync Online</button>
-        <button type="button" class="btn pri" id="importLrcBtn" style="padding:5px 11px;font-size:12px">📂 Import .lrc</button>
+        <button type="button" class="btn" id="openStudioFromSettingsBtn" style="padding:5px 10px;font-size:12px">⤢ Full Screen</button>
+        <button type="button" class="btn" id="fetchLyricsNowBtn" style="padding:5px 10px;font-size:12px">🔄 Sync</button>
+        <button type="button" class="btn" id="pickLyricsSettingsBtn" style="padding:5px 10px;font-size:12px">🎯 Versions</button>
+        <button type="button" class="btn" id="clearLyricsBtn" style="padding:5px 10px;font-size:12px">🗑️ Clear</button>
+        <button type="button" class="btn pri" id="importLrcBtn" style="padding:5px 10px;font-size:12px">📂 .lrc</button>
       </div>
       <div class="lyrics-live-preview" id="settingsLiveLyric">Play any song to show synced lyrics</div>
       <div class="lyrics-scroll-box" id="settingsLyricsList"></div>
@@ -921,7 +983,7 @@ body.compact #rvdj-widget { bottom:calc(90px + env(safe-area-inset-bottom)); }
       <label>Playback speed</label>
       <select id="spd">
         <option value="0.75">0.75x</option>
-        <option value="1">1x</option>
+        <option value="1">1x (Original)</option>
         <option value="1.25">1.25x</option>
         <option value="1.5">1.5x</option>
         <option value="2">2x</option>
@@ -1042,6 +1104,7 @@ const jset = (k, v) => {
 const cleanDisplay = s => String(s || "")
   .replace(/\.[a-z0-9]{2,4}$/i, "")
   .replace(/[\[\(\{].*?[\]\)\}]/g, " ")
+  .replace(/\b(official|video|audio|lyrical|lyric|full\s*song|hd|4k|1080p|720p|320kbps|128kbps|mp3|masstamilan|starmusiq|tamilwire|isaimini|song|remix)\b/gi, " ")
   .replace(/[_\-]+/g, " ")
   .replace(/\s+/g, " ")
   .trim();
@@ -1157,14 +1220,10 @@ const delRec = id => new Promise((res, rej) => {
   t.onerror = () => rej(t.error);
 });
 
-/* 5. SETTINGS & WEB AUDIO DSP STUDIO */
+/* 5. SETTINGS (PURE ORIGINAL HARDWARE AUDIO) */
 const DEF = {
   theme: "system",
   accent: "#1d72fe",
-  dspPreset: "flat",
-  spatial8d: false,
-  karaokeMode: false,
-  normalizeAudio: false,
   shakeSkip: false,
   showLyrics: true,
   autoLyrics: true,
@@ -1196,145 +1255,6 @@ const toHex = (r, g, b) => "#" + [r, g, b].map(v => (+v).toString(16).padStart(2
 const mq = matchMedia("(prefers-color-scheme: dark)");
 const baseVol = () => { au.volume = Math.max(0, Math.min(1, st.volume / 100)); };
 
-/* Web Audio DSP Graph (EQ, 8D Auto-Pan, Karaoke Vocal Remover, Compressor, Reverb) */
-let dspCtx = null;
-let dspReady = false;
-let bassFilter = null;
-let midFilter = null;
-let trebleFilter = null;
-let compNode = null;
-let pannerNode = null;
-let reverbWetGain = null;
-let normalStereoGain = null;
-let karaokeGain = null;
-let panRaf = null;
-
-function initAudioDsp() {
-  if (dspReady) {
-    if (dspCtx && dspCtx.state === "suspended") dspCtx.resume().catch(() => {});
-    return;
-  }
-  const AC = window.AudioContext || window.webkitAudioContext;
-  if (!AC) return;
-
-  try {
-    dspCtx = new AC();
-    const src = dspCtx.createMediaElementSource(au);
-
-    bassFilter = dspCtx.createBiquadFilter();
-    bassFilter.type = "lowshelf";
-    bassFilter.frequency.value = 90;
-
-    midFilter = dspCtx.createBiquadFilter();
-    midFilter.type = "peaking";
-    midFilter.frequency.value = 1400;
-    midFilter.Q.value = 1.0;
-
-    trebleFilter = dspCtx.createBiquadFilter();
-    trebleFilter.type = "highshelf";
-    trebleFilter.frequency.value = 8000;
-
-    compNode = dspCtx.createDynamicsCompressor();
-    pannerNode = dspCtx.createStereoPanner();
-
-    // Karaoke vocal cancellation branch (L - R center vocal subtraction)
-    const splitter = dspCtx.createChannelSplitter(2);
-    const invertR = dspCtx.createGain();
-    invertR.gain.value = -1;
-    const monoDiff = dspCtx.createGain();
-    splitter.connect(monoDiff, 0);
-    splitter.connect(invertR, 1);
-    invertR.connect(monoDiff);
-
-    normalStereoGain = dspCtx.createGain();
-    karaokeGain = dspCtx.createGain();
-
-    // Synthesized impulse reverb branch
-    const convolver = dspCtx.createConvolver();
-    const len = dspCtx.sampleRate * 1.6;
-    const impulse = dspCtx.createBuffer(2, len, dspCtx.sampleRate);
-    for (let ch = 0; ch < 2; ch++) {
-      const d = impulse.getChannelData(ch);
-      for (let i = 0; i < len; i++) {
-        d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 2.6);
-      }
-    }
-    convolver.buffer = impulse;
-    reverbWetGain = dspCtx.createGain();
-    reverbWetGain.gain.value = 0;
-
-    src.connect(bassFilter);
-    bassFilter.connect(midFilter);
-    midFilter.connect(trebleFilter);
-    trebleFilter.connect(compNode);
-
-    // Split between normal stereo and karaoke vocal remover
-    compNode.connect(normalStereoGain);
-    compNode.connect(splitter);
-    monoDiff.connect(karaokeGain);
-
-    normalStereoGain.connect(pannerNode);
-    karaokeGain.connect(pannerNode);
-
-    // Reverb send
-    pannerNode.connect(convolver);
-    convolver.connect(reverbWetGain);
-    reverbWetGain.connect(dspCtx.destination);
-
-    pannerNode.connect(dspCtx.destination);
-    dspReady = true;
-    applyAudioDsp();
-  } catch (err) {
-    console.warn("DSP init skipped:", err);
-  }
-}
-
-function applyAudioDsp() {
-  const effectiveSpeed = st.dspPreset === "slowed" ? 0.85 : +st.speed;
-  au.playbackRate = effectiveSpeed;
-
-  if (!dspReady) return;
-
-  // EQ Presets
-  const presets = {
-    flat:    { bass: 0,  mid: 0,  treble: 0,  reverb: 0 },
-    bass:    { bass: 11, mid: -2, treble: 3,  reverb: 0 },
-    vocal:   { bass: -3, mid: 7,  treble: 4,  reverb: 0 },
-    concert: { bass: 5,  mid: 2,  treble: 5,  reverb: 0.35 },
-    slowed:  { bass: 4,  mid: -1, treble: -2, reverb: 0.42 }
-  };
-  const p = presets[st.dspPreset] || presets.flat;
-  bassFilter.gain.value = p.bass;
-  midFilter.gain.value = p.mid;
-  trebleFilter.gain.value = p.treble;
-  reverbWetGain.gain.value = p.reverb;
-
-  // Karaoke mode toggle
-  normalStereoGain.gain.value = st.karaokeMode ? 0 : 1;
-  karaokeGain.gain.value = st.karaokeMode ? 1.25 : 0;
-
-  // Volume normalization compressor
-  compNode.threshold.value = st.normalizeAudio ? -26 : 0;
-  compNode.ratio.value = st.normalizeAudio ? 8 : 1;
-
-  // 8D Spatial Audio auto-panning loop
-  if (st.spatial8d && !panRaf) {
-    const startT = performance.now();
-    const panLoop = now => {
-      if (!st.spatial8d || !pannerNode) {
-        if (pannerNode) pannerNode.pan.value = 0;
-        panRaf = null;
-        return;
-      }
-      pannerNode.pan.value = Math.sin((now - startT) / 1400) * 0.88;
-      panRaf = requestAnimationFrame(panLoop);
-    };
-    panRaf = requestAnimationFrame(panLoop);
-  } else if (!st.spatial8d && pannerNode) {
-    pannerNode.pan.value = 0;
-  }
-}
-
 function updateNetworkModeBadge() {
   const badge = $("rvdj-mode-badge");
   if (!badge) return;
@@ -1356,12 +1276,13 @@ function apply() {
   R.style.setProperty("--accent", st.accent);
   R.style.setProperty("--rgb", rgbOf(st.accent).join(","));
   $("theme").value = st.theme;
-  document.querySelector('meta[name=theme-color]').content = dark ? "#08090d" : "#f4f7fb";
+  document.querySelector('meta[name=theme-color]').content = dark ? "#070b16" : "#f4f7fb";
   document.body.classList.toggle("compact", st.compact);
   document.body.classList.toggle("noart", !st.art);
   document.body.classList.toggle("hide-lyrics", !st.showLyrics);
+  au.preservesPitch = true;
+  au.playbackRate = +st.speed || 1;
   baseVol();
-  applyAudioDsp();
   $("shufBtn").classList.toggle("on", st.shuffle);
   $("repBtn").classList.toggle("on", st.repeat !== "off");
   $("repBtn").textContent = st.repeat === "one" ? "🔂" : "🔁";
@@ -1411,7 +1332,6 @@ function setSleepTimer(val) {
     const s = String(secLeft % 60).padStart(2, "0");
     $("sleepCountdown").textContent = `(${m}:${s} left)`;
 
-    // Gradual 15-second volume fade-out before sleeping
     if (secLeft <= 15 && !au.paused) {
       au.volume = Math.max(0.02, (st.volume / 100) * (secLeft / 15));
     }
@@ -1457,7 +1377,7 @@ $("resetPlayedTodayBtn").onclick = () => {
   alert("All 'Played Today' badges have been reset.");
 };
 
-/* 7. FULL-SCREEN SYNCED LYRICS STUDIO + TAP-TO-SEEK */
+/* 7. ADVANCED SYNCED LYRICS ENGINE + DURATION SCORING + VERSION PICKER + OFFSET */
 let tracks = [];
 let cur = -1;
 let url = null;
@@ -1469,20 +1389,28 @@ let favs = jget("rishi_favs", []);
 let plays = jget("rishi_plays", {});
 let recent = jget("rishi_recent", []);
 let lyricsMap = jget("rishi_lyrics_v1", {});
+let lyricOffsets = jget("rishi_lyric_offsets_v1", {});
 
 const added = t => +(/^track_(\d+)_/.exec(t.id) || [0, 0])[1];
 const fmt = s => !isFinite(s) || s < 0 ? "0:00" : Math.floor(s / 60) + ":" + String(Math.floor(s % 60)).padStart(2, "0");
 
 function parseLyrics(raw) {
   if (!raw) return [];
-  return String(raw).split(/\r?\n/).map(line => {
-    const m = line.match(/^\[(\d{1,2}):(\d{2})(?:\.(\d{1,3}))?\](.*)$/);
-    if (m) {
-      const ms = m[3] ? Number("0." + m[3]) : 0;
-      return { time: Number(m[1]) * 60 + Number(m[2]) + ms, text: m[4].trim() };
+  const out = [];
+  for (const line of String(raw).split(/\r?\n/)) {
+    const tags = [...line.matchAll(/\[(\d{1,2}):(\d{2})(?:\.(\d{1,3}))?\]/g)];
+    const text = line.replace(/\[(\d{1,2}):(\d{2})(?:\.(\d{1,3}))?\]/g, "").trim();
+    if (!text) continue;
+    if (tags.length) {
+      for (const m of tags) {
+        const ms = m[3] ? Number("0." + m[3]) : 0;
+        out.push({ time: Number(m[1]) * 60 + Number(m[2]) + ms, text });
+      }
+    } else {
+      out.push({ time: null, text });
     }
-    return { time: null, text: line.trim() };
-  }).filter(x => x.text);
+  }
+  return out.sort((a, b) => (a.time ?? 999999) - (b.time ?? 999999));
 }
 
 let lastActiveLyricIdx = -1;
@@ -1500,11 +1428,14 @@ function renderStudioLyrics(t, lines, activeIdx, rebuildAll) {
     return;
   }
 
+  const offset = lyricOffsets[t.id] || 0;
+  $("lyricOffsetBadge").textContent = (offset >= 0 ? "+" : "") + offset.toFixed(1) + "s";
+
   studioTitle.textContent = cleanDisplay(t.title);
-  studioSub.textContent = `${cleanDisplay(t.director)} • Tap any timestamped line to seek`;
+  studioSub.textContent = `${cleanDisplay(t.director)} • Tap line to seek • Tap 🎯 Versions if needed`;
 
   if (!lines.length) {
-    studioScroll.innerHTML = `<div class="studio-empty">No synced lyrics yet for <b>${esc(cleanDisplay(t.title))}</b>.<br><br>Tap <b>🔄 Sync Online</b> or <b>📂 Import .lrc</b> above.</div>`;
+    studioScroll.innerHTML = `<div class="studio-empty">No synced lyrics yet for <b>${esc(cleanDisplay(t.title))}</b>.<br><br>Tap <b>🔄</b> to auto-match or <b>🎯 Versions</b> to pick manually.</div>`;
     return;
   }
 
@@ -1512,8 +1443,9 @@ function renderStudioLyrics(t, lines, activeIdx, rebuildAll) {
     lastRenderedTrackId = t.id;
     studioScroll.innerHTML = lines.map((x, idx) => {
       const cls = idx === activeIdx ? "s-line active" : (idx < activeIdx ? "s-line past" : "s-line");
-      const tsAttr = x.time !== null ? `data-time="${x.time}"` : "";
-      const tsBadge = x.time !== null ? `<span class="s-ts">${fmt(x.time)}</span>` : "";
+      const adjTime = x.time !== null ? Math.max(0, x.time + offset) : null;
+      const tsAttr = adjTime !== null ? `data-time="${adjTime}"` : "";
+      const tsBadge = adjTime !== null ? `<span class="s-ts">${fmt(adjTime)}</span>` : "";
       return `<div class="${cls}" data-idx="${idx}" ${tsAttr}>${tsBadge}${esc(x.text)}</div>`;
     }).join("");
   } else {
@@ -1546,13 +1478,14 @@ function updateSyncedLyrics(forceScroll = false) {
   const lines = parseLyrics(lyricsMap[t.id]);
   if (!lines.length) {
     barTxt.textContent = `♪ ${cleanDisplay(t.title)} — ${cleanDisplay(t.director)}`;
-    prev.textContent = "Lyrics ready when synced or imported (.lrc)";
+    prev.textContent = "Lyrics ready — tap 🔄 Sync or 🎯 Versions";
     list.innerHTML = "";
     renderStudioLyrics(t, [], -1, true);
     return;
   }
 
-  const now = au.currentTime || 0;
+  const offset = lyricOffsets[t.id] || 0;
+  const now = (au.currentTime || 0) - offset;
   const timed = lines.filter(x => x.time !== null);
   let activeIdx = 0;
   if (timed.length) {
@@ -1596,6 +1529,24 @@ $("liveLyricBar").onclick = openLyricStudio;
 $("openStudioFromSettingsBtn").onclick = openLyricStudio;
 $("closeStudioBtn").onclick = closeLyricStudio;
 
+$("lyricDelayMinus").onclick = () => {
+  const t = tracks[cur];
+  if (!t) return;
+  lyricOffsets[t.id] = Math.round(((lyricOffsets[t.id] || 0) - 0.5) * 10) / 10;
+  jset("rishi_lyric_offsets_v1", lyricOffsets);
+  lastRenderedTrackId = null;
+  updateSyncedLyrics(true);
+};
+
+$("lyricDelayPlus").onclick = () => {
+  const t = tracks[cur];
+  if (!t) return;
+  lyricOffsets[t.id] = Math.round(((lyricOffsets[t.id] || 0) + 0.5) * 10) / 10;
+  jset("rishi_lyric_offsets_v1", lyricOffsets);
+  lastRenderedTrackId = null;
+  updateSyncedLyrics(true);
+};
+
 $("studioScroll").onclick = e => {
   const lineEl = e.target.closest(".s-line");
   if (!lineEl) return;
@@ -1619,6 +1570,135 @@ $("studioNext").onclick = () => go(1);
 $("studioSyncBtn").onclick = () => { if (tracks[cur]) fetchLyricsAutomatically(tracks[cur], true); };
 $("studioImportBtn").onclick = () => $("importLrcBtn").click();
 
+function clearCurrentLyrics() {
+  const t = tracks[cur];
+  if (!t) return;
+  delete lyricsMap[t.id];
+  delete lyricOffsets[t.id];
+  jset("rishi_lyrics_v1", lyricsMap);
+  jset("rishi_lyric_offsets_v1", lyricOffsets);
+  lastActiveLyricIdx = -1;
+  lastRenderedTrackId = null;
+  updateSyncedLyrics(true);
+}
+$("clearLyricsBtn").onclick = clearCurrentLyrics;
+$("studioClearBtn").onclick = clearCurrentLyrics;
+
+/* Wait until audio duration is ready so LRCLIB can verify exact song length */
+function waitForTrackDuration(timeoutMs = 2500) {
+  if (isFinite(au.duration) && au.duration > 0) return Promise.resolve(au.duration);
+  return new Promise(resolve => {
+    let done = false;
+    const finish = () => {
+      if (done) return;
+      done = true;
+      au.removeEventListener("loadedmetadata", finish);
+      resolve(isFinite(au.duration) && au.duration > 0 ? au.duration : 0);
+    };
+    au.addEventListener("loadedmetadata", finish, { once: true });
+    setTimeout(finish, timeoutMs);
+  });
+}
+
+function scoreLyricCandidate(cand, targetTitle, targetArtist, trackDur) {
+  if (!cand || (!cand.syncedLyrics && !cand.plainLyrics)) return -1;
+  const candTitle = cand.trackName || cand.name || "";
+  const candArtist = cand.artistName || "";
+  const candAlbum = cand.albumName || "";
+
+  const tNorm = normSearch(targetTitle);
+  const cNorm = normSearch(candTitle);
+  const tSkel = skeleton(targetTitle);
+  const cSkel = skeleton(candTitle);
+
+  let score = 0;
+  if (cNorm && tNorm) {
+    if (cNorm === tNorm) score += 120;
+    else if (cNorm.includes(tNorm) || tNorm.includes(cNorm)) score += 75;
+    else if (cSkel && tSkel && (cSkel === tSkel || cSkel.includes(tSkel) || tSkel.includes(cSkel))) score += 60;
+    else score -= 80;
+  }
+
+  if (targetArtist) {
+    const aNorm = normSearch(targetArtist);
+    const caNorm = normSearch(candArtist + " " + candAlbum);
+    const aSkel = skeleton(targetArtist);
+    const caSkel = skeleton(candArtist + " " + candAlbum);
+    if (aNorm && caNorm.includes(aNorm)) score += 65;
+    else if (aSkel && caSkel.includes(aSkel)) score += 50;
+  }
+
+  if (trackDur > 0 && cand.duration > 0) {
+    const diff = Math.abs(cand.duration - trackDur);
+    if (diff <= 2) score += 90;
+    else if (diff <= 5) score += 65;
+    else if (diff <= 10) score += 25;
+    else if (diff > 20) score -= 75;
+  }
+
+  if (cand.syncedLyrics) score += 35;
+  return score;
+}
+
+async function queryLrclibCandidates(track, customQuery = "") {
+  const rawTitle = cleanDisplay(track.title);
+  const phoneticTitle = tamilToEnglishPhonetic(rawTitle);
+  const artistClean = track.director && track.director !== "UNKNOWN DIRECTOR" ? cleanDisplay(track.director) : "";
+  const trackDur = await waitForTrackDuration();
+
+  const candidateMap = new Map();
+  const addItems = arr => {
+    if (!Array.isArray(arr)) return;
+    for (const item of arr) {
+      if (item && (item.syncedLyrics || item.plainLyrics)) {
+        candidateMap.set(item.id || `${item.trackName}_${item.artistName}_${item.duration}`, item);
+      }
+    }
+  };
+
+  if (customQuery) {
+    const r = await fetch(`https://lrclib.net/api/search?q=${encodeURIComponent(customQuery)}`, { mode: "cors" });
+    if (r.ok) addItems(await r.json());
+  } else {
+    // 1. Exact signature lookup via /api/get when artist & duration are known
+    if (artistClean && trackDur > 0) {
+      try {
+        const u = `https://lrclib.net/api/get?track_name=${encodeURIComponent(rawTitle)}&artist_name=${encodeURIComponent(artistClean)}&duration=${Math.round(trackDur)}`;
+        const gr = await fetch(u, { mode: "cors" });
+        if (gr.ok) {
+          const exact = await gr.json();
+          if (exact && (exact.syncedLyrics || exact.plainLyrics)) addItems([exact]);
+        }
+      } catch (_) {}
+    }
+
+    // 2. Multi-query search (Title + Director, Title alone, and Tamil phonetic transliteration)
+    const searchQueries = new Set();
+    if (artistClean) searchQueries.add(`${rawTitle} ${artistClean}`);
+    searchQueries.add(rawTitle);
+    if (phoneticTitle.toLowerCase() !== rawTitle.toLowerCase()) {
+      searchQueries.add(phoneticTitle);
+      if (artistClean) searchQueries.add(`${phoneticTitle} ${tamilToEnglishPhonetic(artistClean)}`);
+    }
+
+    for (const qStr of searchQueries) {
+      try {
+        const res = await fetch(`https://lrclib.net/api/search?q=${encodeURIComponent(qStr)}`, { mode: "cors" });
+        if (res.ok) addItems(await res.json());
+      } catch (_) {}
+      // Stop early if we already found a high-confidence duration-matched synced lyric
+      const earlyBest = [...candidateMap.values()].map(c => ({
+        c, s: scoreLyricCandidate(c, rawTitle, artistClean, trackDur)
+      })).sort((a, b) => b.s - a.s)[0];
+      if (earlyBest && earlyBest.s >= 180) break;
+    }
+  }
+
+  return [...candidateMap.values()]
+    .map(c => ({ item: c, score: scoreLyricCandidate(c, customQuery || rawTitle, artistClean, trackDur) }))
+    .sort((a, b) => b.score - a.score);
+}
+
 async function fetchLyricsAutomatically(track, force = false) {
   if (!track) return;
   if (!force && !st.autoLyrics) return;
@@ -1632,8 +1712,6 @@ async function fetchLyricsAutomatically(track, force = false) {
   }
 
   const titleClean = cleanDisplay(track.title);
-  const artistClean = track.director && track.director !== "UNKNOWN DIRECTOR" ? cleanDisplay(track.director) : "";
-
   if (!navigator.onLine) {
     $("liveLyricTxt").textContent = `♪ ${titleClean} (Offline — tap to import .lrc)`;
     $("settingsLiveLyric").textContent = "Offline — use 'Import .lrc' to load lyrics without internet";
@@ -1641,37 +1719,89 @@ async function fetchLyricsAutomatically(track, force = false) {
     return;
   }
 
-  $("liveLyricTxt").textContent = `🔍 Fetching lyrics for ${titleClean}...`;
-  $("settingsLiveLyric").textContent = `🔍 Searching lyrics for "${titleClean}"...`;
+  $("liveLyricTxt").textContent = `🔍 Matching exact lyrics for ${titleClean}...`;
+  $("settingsLiveLyric").textContent = `🔍 Matching exact lyrics & duration for "${titleClean}"...`;
 
   try {
-    const queries = artistClean ? [`${titleClean} ${artistClean}`, titleClean] : [titleClean];
-    for (const rawQ of queries) {
-      const res = await fetch(`https://lrclib.net/api/search?q=${encodeURIComponent(rawQ)}`, { mode: "cors" });
-      if (!res.ok) continue;
-      const data = await res.json();
-      const match = Array.isArray(data)
-        ? (data.find(x => x.syncedLyrics) || data.find(x => x.plainLyrics))
-        : null;
-      if (match && (match.syncedLyrics || match.plainLyrics)) {
-        lyricsMap[track.id] = match.syncedLyrics || match.plainLyrics;
-        jset("rishi_lyrics_v1", lyricsMap);
-        lastActiveLyricIdx = -1;
-        lastRenderedTrackId = null;
-        updateSyncedLyrics(true);
-        return;
-      }
+    const ranked = await queryLrclibCandidates(track);
+    const best = ranked[0];
+
+    if (best && best.score >= 55) {
+      lyricsMap[track.id] = best.item.syncedLyrics || best.item.plainLyrics;
+      jset("rishi_lyrics_v1", lyricsMap);
+      lastActiveLyricIdx = -1;
+      lastRenderedTrackId = null;
+      updateSyncedLyrics(true);
+      return;
     }
-    $("settingsLiveLyric").textContent = "No online match found — tap 'Import .lrc' to add manually";
+
+    $("settingsLiveLyric").textContent = "No exact duration match — tap '🎯 Versions' to pick manually";
+    $("liveLyricTxt").textContent = `♪ ${titleClean} (Tap LYRICS ⤢ → 🎯 Versions)`;
+    renderStudioLyrics(track, [], -1, true);
   } catch (_) {
     $("liveLyricTxt").textContent = `♪ ${titleClean} — ${cleanDisplay(track.director)}`;
-    $("settingsLiveLyric").textContent = "Server unreachable — tap 'Import .lrc' for offline lyrics";
+    $("settingsLiveLyric").textContent = "Server unreachable — tap '📂 .lrc' for offline lyrics";
     renderStudioLyrics(track, [], -1, true);
-    return;
   }
-
-  updateSyncedLyrics(true);
 }
+
+/* Lyric Version Picker Modal */
+let pickerCandidates = [];
+
+async function openLyricVersionPicker(customQuery = "") {
+  const t = tracks[cur];
+  if (!t) return alert("Play or select a song first.");
+  $("sm").classList.remove("open");
+  $("lyricPickerModal").classList.add("open");
+  if (!customQuery) $("pickerSearchInput").value = cleanDisplay(t.title);
+  $("pickerStatus").textContent = "Searching matching lyric versions...";
+  $("pickerResults").innerHTML = "";
+
+  try {
+    const ranked = await queryLrclibCandidates(t, customQuery);
+    pickerCandidates = ranked.map(x => x.item);
+    if (!pickerCandidates.length) {
+      $("pickerStatus").textContent = "No lyrics found. Try editing the search box above (e.g., song + movie name).";
+      return;
+    }
+    const trackDur = isFinite(au.duration) && au.duration > 0 ? fmt(au.duration) : "—";
+    $("pickerStatus").textContent = `Your audio length: ${trackDur} • Tap a version below to apply:`;
+    $("pickerResults").innerHTML = pickerCandidates.map((c, idx) => {
+      const badge = c.syncedLyrics ? "⏱️ SYNCED" : "📄 PLAIN";
+      const firstLine = parseLyrics(c.syncedLyrics || c.plainLyrics)[0]?.text || "";
+      return `
+        <div class="lyric-cand" data-pidx="${idx}">
+          <div class="lyric-cand-top">
+            <span>${esc(c.trackName || c.name || "Untitled")}</span>
+            <span style="color:var(--accent);font-size:11px">${badge} • ${fmt(c.duration)}</span>
+          </div>
+          <div class="lyric-cand-sub">${esc(c.artistName || "Unknown Artist")}${c.albumName ? " • " + esc(c.albumName) : ""}</div>
+          <div class="lyric-cand-snippet">♪ ${esc(firstLine)}</div>
+        </div>
+      `;
+    }).join("");
+  } catch (_) {
+    $("pickerStatus").textContent = "Internet connection required to search lyric versions.";
+  }
+}
+
+$("pickerResults").onclick = e => {
+  const cardEl = e.target.closest("[data-pidx]");
+  if (!cardEl || !tracks[cur]) return;
+  const chosen = pickerCandidates[Number(cardEl.dataset.pidx)];
+  if (!chosen) return;
+  lyricsMap[tracks[cur].id] = chosen.syncedLyrics || chosen.plainLyrics;
+  jset("rishi_lyrics_v1", lyricsMap);
+  lastActiveLyricIdx = -1;
+  lastRenderedTrackId = null;
+  $("lyricPickerModal").classList.remove("open");
+  updateSyncedLyrics(true);
+};
+
+$("studioPickBtn").onclick = () => openLyricVersionPicker();
+$("pickLyricsSettingsBtn").onclick = () => openLyricVersionPicker();
+$("pickerSearchBtn").onclick = () => openLyricVersionPicker($("pickerSearchInput").value.trim());
+$("closePickerBtn").onclick = () => $("lyricPickerModal").classList.remove("open");
 
 const lrcFileInput = document.createElement("input");
 lrcFileInput.type = "file";
@@ -1812,8 +1942,25 @@ $("q").oninput = render;
 $("dir").onchange = render;
 $("viewBtn").onclick = () => { set({ view: st.view === "grid" ? "list" : "grid" }); render(); };
 
-/* 9. PLAYBACK ENGINE */
+/* 9. PLAYBACK ENGINE (PURE HARDWARE AUDIO + BACKGROUND WAKE LOCK + MEDIASESSION ARTWORK) */
 let pre = null;
+let wakeLock = null;
+
+async function requestWakeLock() {
+  try {
+    if ("wakeLock" in navigator && !wakeLock) {
+      wakeLock = await navigator.wakeLock.request("screen");
+      wakeLock.addEventListener("release", () => { wakeLock = null; });
+    }
+  } catch (_) {}
+}
+
+function releaseWakeLock() {
+  if (wakeLock) {
+    try { wakeLock.release(); } catch (_) {}
+    wakeLock = null;
+  }
+}
 
 function pickNext(dir = 1) {
   if (dir === 1 && smartQueue.length) {
@@ -1849,7 +1996,9 @@ async function load(i, preUrl) {
   url = u;
   cur = i;
   au.src = u;
-  applyAudioDsp();
+  au.preservesPitch = true;
+  au.playbackRate = +st.speed || 1;
+  baseVol();
   $("dT").textContent = t.title;
   $("dS").textContent = t.director;
   $("bar").value = 0;
@@ -1863,18 +2012,27 @@ async function load(i, preUrl) {
 }
 
 async function play() {
-  initAudioDsp();
   if (cur < 0 && tracks.length) {
     compute();
     const i = view.find(i => !hasPlayedToday(tracks[i].id));
     if (i === undefined) return;
     if (!await load(i)) return;
   }
-  try { await au.play(); } catch (e) { console.error(e); }
+  try {
+    await au.play();
+    if (tracks[cur]) media(tracks[cur]);
+    requestWakeLock();
+  } catch (e) {
+    console.error(e);
+  }
   syncIcons();
 }
 
-function pause() { au.pause(); syncIcons(); }
+function pause() {
+  au.pause();
+  releaseWakeLock();
+  syncIcons();
+}
 
 function syncIcons() {
   const icon = au.paused ? "▶" : "❚❚";
@@ -1931,10 +2089,11 @@ au.onended = () => {
     sleepEndOfTrack = false;
     $("sleepTimerSelect").value = "0";
     $("sleepCountdown").textContent = "";
+    releaseWakeLock();
     syncIcons();
     return;
   }
-  if (st.autoplay) go(1); else syncIcons();
+  if (st.autoplay) go(1); else { releaseWakeLock(); syncIcons(); }
 };
 au.onerror = () => { if (!busy && tracks[cur]) go(1); };
 
@@ -1973,7 +2132,7 @@ $("repBtn").onclick = () => {
   sync();
 };
 
-/* MEDIA SESSION WITH AIRPODS & boAt BLUETOOTH EARBUD TRIGGER */
+/* MEDIA SESSION WITH ARTWORK + AIRPODS / boAt EARBUD GESTURE */
 let lastEarbudTap = 0;
 
 function triggerVoiceFromEarbud() {
@@ -1982,10 +2141,17 @@ function triggerVoiceFromEarbud() {
 
 function media(t) {
   if (!("mediaSession" in navigator)) return;
+  const icon192 = new URL("./icon-192.png", location.href).href;
+  const icon512 = new URL("./icon-512.png", location.href).href;
+
   navigator.mediaSession.metadata = new MediaMetadata({
     title: t.title,
     artist: t.director,
-    album: "Rishi Music"
+    album: "Rishi Music",
+    artwork: [
+      { src: icon192, sizes: "192x192", type: "image/png" },
+      { src: icon512, sizes: "512x512", type: "image/png" }
+    ]
   });
 
   const handleEarbudPlayPause = action => {
@@ -2145,9 +2311,7 @@ $("files").onchange = async e => {
   render();
 };
 
-/* 11. DUAL-MODE VOICE DJ:
-       - OFFLINE = NORMAL MODE (1/2/3/4+ Cadence Beats, 0 Internet)
-       - ONLINE  = ADVANCED AI MODE (Moods, Smart Queues, Track Info, Exact Song/Director) */
+/* 11. DUAL-MODE VOICE DJ */
 const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
 let isListening = false;
 let onlineRec = null;
@@ -2591,7 +2755,7 @@ function startHybridVoiceDj(targetSearchBar = false) {
     $("mic").classList.add("on");
     if (!targetSearchBar) {
       $("rvdj-heard").textContent = st.voiceLang === "ta-IN" ? "🎧 கேட்கிறேன்..." : "🎧 Listening via AirPods / Mic...";
-      $("rvdj-reply").textContent = "Say a song, music director, mood (e.g. 'romantic mix'), or 'show lyrics'";
+      $("rvdj-reply").textContent = "Say a song, music director, mood, or 'show lyrics'";
       showDjCard();
     } else {
       $("q").placeholder = "Listening...";
@@ -2653,7 +2817,7 @@ $("startHybridVoiceBtn").onclick = () => { $("sm").classList.remove("open"); sta
 $("testVoiceBtn").onclick = () => {
   speakDj(st.voiceLang === "ta-IN"
     ? "வணக்கம்! நான் உங்கள் ரிஷி மியூசிக் குரல் உதவியாளர்."
-    : "Hello! I am Rishi, connected to your AirPods in dual voice mode.");
+    : "Hello! I am Rishi, playing original studio audio.");
 };
 
 $("rvdj-lang-toggle").onclick = () => {
@@ -2677,15 +2841,14 @@ const bind = (id, key, conv = x => x, evt = "change") => {
 
 function sync() {
   for (const [id, k] of [
-    ["theme", "theme"], ["dspPreset", "dspPreset"], ["spatial8d", "spatial8d"],
-    ["karaokeMode", "karaokeMode"], ["normalizeAudio", "normalizeAudio"],
-    ["shakeSkip", "shakeSkip"], ["showLyrics", "showLyrics"],
-    ["autoLyricsToggle", "autoLyrics"], ["djGenderSelect", "voiceGender"],
-    ["djLangSelect", "voiceLang"], ["earbudGestureSelect", "earbudGesture"],
-    ["autoplay", "autoplay"], ["gapless", "gapless"], ["cf", "crossfade"],
-    ["vol", "volume"], ["spd", "speed"], ["remember", "remember"],
-    ["shuffle", "shuffle"], ["repeat", "repeat"], ["sort", "sort"],
-    ["view", "view"], ["compact", "compact"], ["art", "art"]
+    ["theme", "theme"], ["shakeSkip", "shakeSkip"],
+    ["showLyrics", "showLyrics"], ["autoLyricsToggle", "autoLyrics"],
+    ["djGenderSelect", "voiceGender"], ["djLangSelect", "voiceLang"],
+    ["earbudGestureSelect", "earbudGesture"], ["autoplay", "autoplay"],
+    ["gapless", "gapless"], ["cf", "crossfade"], ["vol", "volume"],
+    ["spd", "speed"], ["remember", "remember"], ["shuffle", "shuffle"],
+    ["repeat", "repeat"], ["sort", "sort"], ["view", "view"],
+    ["compact", "compact"], ["art", "art"]
   ]) {
     const el = $(id);
     if (!el) continue;
@@ -2697,10 +2860,6 @@ function sync() {
 }
 
 bind("theme", "theme");
-bind("dspPreset", "dspPreset");
-bind("spatial8d", "spatial8d");
-bind("karaokeMode", "karaokeMode");
-bind("normalizeAudio", "normalizeAudio");
 bind("shakeSkip", "shakeSkip");
 bind("showLyrics", "showLyrics");
 bind("autoLyricsToggle", "autoLyrics");
@@ -2795,7 +2954,7 @@ $("sx").onclick = $("done").onclick = close;
 $("sm").onclick = e => { if (e.target === $("sm")) close(); };
 
 $("exp").onclick = () => {
-  const data = { app: "Rishi Music", exported: new Date().toISOString(), settings: st, favourites: favs, playCounts: plays, recent, playedToday: dailyData(), lyrics: lyricsMap, tracks };
+  const data = { app: "Rishi Music", exported: new Date().toISOString(), settings: st, favourites: favs, playCounts: plays, recent, playedToday: dailyData(), lyrics: lyricsMap, lyricOffsets, tracks };
   const a = document.createElement("a");
   const u = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: "application/json" }));
   a.href = u; a.download = "rishi-music-backup.json"; a.click();
@@ -2819,6 +2978,7 @@ backupFileInput.onchange = async e => {
     if (parsed.playCounts) { plays = parsed.playCounts; jset("rishi_plays", plays); }
     if (Array.isArray(parsed.recent)) { recent = parsed.recent; jset("rishi_recent", recent); }
     if (parsed.lyrics) { lyricsMap = { ...lyricsMap, ...parsed.lyrics }; jset("rishi_lyrics_v1", lyricsMap); }
+    if (parsed.lyricOffsets) { lyricOffsets = { ...lyricOffsets, ...parsed.lyricOffsets }; jset("rishi_lyric_offsets_v1", lyricOffsets); }
     sync();
     preview(st.accent);
     refreshStatsCard();
@@ -2855,6 +3015,25 @@ installBtn.onclick = async () => {
   alert("Open in Google Chrome menu (⋮) -> 'Install app' or 'Add to Home screen'.");
 };
 addEventListener("appinstalled", () => { LS.setItem("rishi_pwa_installed", "true"); installBtn.style.display = "none"; });
+
+/* KEEP MEDIA SESSION & WAKE LOCK ACTIVE WHEN SWITCHING APPS */
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "visible" && !au.paused) {
+    requestWakeLock();
+  }
+});
+
+setInterval(() => {
+  if (!au.paused && "mediaSession" in navigator && isFinite(au.duration) && au.duration > 0) {
+    try {
+      navigator.mediaSession.setPositionState({
+        duration: au.duration,
+        playbackRate: au.playbackRate,
+        position: Math.min(au.currentTime, au.duration)
+      });
+    } catch (_) {}
+  }
+}, 2000);
 
 /* 14. INIT */
 apply();
